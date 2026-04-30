@@ -28,3 +28,4 @@ dist-ssr
 backend/node_modules/
 backend/data.db
 backend/*.db
+backend-go/data.db
