@@ -27,6 +27,13 @@ Forked from [Spandan-Bhattarai/Personality-Traits-Tester](https://github.com/Spa
 | Backend | Go 1.25 + Gin |
 | Database | SQLite (modernc.org/sqlite, pure Go, no CGO) |
 
+### Environment Variables
+
+| Variable | Required | Description |
+|---|---|---|
+| `PORT` | No | Server port (default: 3000) |
+| `ADMIN_TOKEN` | No | Protects `/submissions`, `/export`, `/stats`. If unset, these endpoints return 401. |
+
 ---
 
 ## Quick Start
@@ -48,6 +55,9 @@ cd QuestionnaireWithBackend
 
 ```bash
 cd backend-go
+# Optional: set admin token to protect data endpoints
+# If not set, /submissions, /export, /stats return 401
+set ADMIN_TOKEN=your-secret-token
 go run main.go
 ```
 
@@ -98,19 +108,30 @@ Request body:
   "answers": ["3", "5", "1", "4", "2", "3", "5", "1"],
   "scores": {"EI": 3, "SN": -1, "TF": 2, "JP": -2},
   "result": "INTJ",
-  "source": ""
+  "source": "",
+  "user_id": "550e8400-e29b-41d4-a716-446655440000"
 }
 ```
+
+- `user_id` is optional. If provided, it is stored as-is. If omitted, the server generates one.
+- The frontend persists `user_id` in localStorage so the same user always submits the same ID.
 
 Response:
 ```json
 {
   "success": true,
-  "id": "c8e06fa3-d3ef-4116-be03-7a08c5805c64"
+  "id": "c8e06fa3-d3ef-4116-be03-7a08c5805c64",
+  "user_id": "550e8400-e29b-41d4-a716-446655440000"
 }
 ```
 
 ### GET /api/submissions
+
+**Protected.** Requires `X-Admin-Token` header matching `ADMIN_TOKEN` env var.
+
+```bash
+curl -H "X-Admin-Token: your-secret-token" http://localhost:3000/api/submissions
+```
 
 Response:
 ```json
@@ -132,9 +153,13 @@ Response:
 
 ### GET /api/submissions/export
 
+**Protected.** Requires `X-Admin-Token` header.
+
 Returns a CSV file with BOM for Excel compatibility.
 
 ### GET /api/stats
+
+**Protected.** Requires `X-Admin-Token` header.
 
 Response:
 ```json

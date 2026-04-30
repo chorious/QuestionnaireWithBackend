@@ -140,65 +140,10 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({
           <div className="border-t pt-8">
             <h4 className="text-xl font-bold text-gray-800 mb-4">Your Personality Dimensions</h4>
             <div className="grid md:grid-cols-2 gap-4">
-              <div className="bg-gray-50 p-4 rounded-xl">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="font-medium">Energy</span>
-                  <span className="text-sm text-gray-600">
-                    {result.scores.EI >= 0 ? 'Extraverted' : 'Introverted'}
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="h-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"
-                    style={{ width: `${Math.abs(result.scores.EI) * 10 + 50}%` }}
-                  />
-                </div>
-              </div>
-              
-              <div className="bg-gray-50 p-4 rounded-xl">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="font-medium">Information</span>
-                  <span className="text-sm text-gray-600">
-                    {result.scores.SN >= 0 ? 'Sensing' : 'Intuitive'}
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="h-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"
-                    style={{ width: `${Math.abs(result.scores.SN) * 10 + 50}%` }}
-                  />
-                </div>
-              </div>
-              
-              <div className="bg-gray-50 p-4 rounded-xl">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="font-medium">Decisions</span>
-                  <span className="text-sm text-gray-600">
-                    {result.scores.TF >= 0 ? 'Thinking' : 'Feeling'}
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="h-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"
-                    style={{ width: `${Math.abs(result.scores.TF) * 10 + 50}%` }}
-                  />
-                </div>
-              </div>
-              
-              <div className="bg-gray-50 p-4 rounded-xl">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="font-medium">Structure</span>
-                  <span className="text-sm text-gray-600">
-                    {result.scores.JP >= 0 ? 'Judging' : 'Perceiving'}
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="h-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"
-                    style={{ width: `${Math.abs(result.scores.JP) * 10 + 50}%` }}
-                  />
-                </div>
-              </div>
+              <DimensionBar label="Energy" positive="Extraverted" negative="Introverted" score={result.scores.EI} />
+              <DimensionBar label="Information" positive="Sensing" negative="Intuitive" score={result.scores.SN} />
+              <DimensionBar label="Decisions" positive="Thinking" negative="Feeling" score={result.scores.TF} />
+              <DimensionBar label="Structure" positive="Judging" negative="Perceiving" score={result.scores.JP} />
             </div>
           </div>
         </div>
@@ -267,3 +212,29 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({
     </div>
   );
 };
+
+// Each dimension has 8 questions, max score per question is ±2
+const MAX_DIM_SCORE = 8 * 2;
+
+function DimensionBar({ label, positive, negative, score }: {
+  label: string;
+  positive: string;
+  negative: string;
+  score: number;
+}) {
+  const pct = Math.min(100, Math.abs(score) / MAX_DIM_SCORE * 50 + 50);
+  return (
+    <div className="bg-gray-50 p-4 rounded-xl">
+      <div className="flex justify-between items-center mb-2">
+        <span className="font-medium">{label}</span>
+        <span className="text-sm text-gray-600">{score >= 0 ? positive : negative}</span>
+      </div>
+      <div className="w-full bg-gray-200 rounded-full h-2">
+        <div
+          className="h-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+}

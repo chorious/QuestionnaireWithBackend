@@ -15,6 +15,11 @@ import (
 )
 
 var db *sql.DB
+var adminToken string
+
+func init() {
+	adminToken = os.Getenv("ADMIN_TOKEN")
+}
 
 func main() {
 	var err error
@@ -34,9 +39,13 @@ func main() {
 	{
 		api.GET("/version", handleVersion)
 		api.POST("/submit", handleSubmit)
-		api.GET("/submissions", handleList)
-		api.GET("/submissions/export", handleExport)
-		api.GET("/stats", handleStats)
+	}
+
+	admin := api.Group("", adminAuth())
+	{
+		admin.GET("/submissions", handleList)
+		admin.GET("/submissions/export", handleExport)
+		admin.GET("/stats", handleStats)
 	}
 
 	// SPA fallback: serve dist/index.html for non-API routes
@@ -85,6 +94,7 @@ func handleSubmit(c *gin.Context) {
 		Scores  map[string]int `json:"scores"`
 		Result  string         `json:"result"`
 		Source  string         `json:"source"`
+		UserID  string         `json:"user_id"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -92,7 +102,10 @@ func handleSubmit(c *gin.Context) {
 	}
 
 	id := uuid.New().String()
-	userID := uuid.New().String()
+	userID := req.UserID
+	if userID == "" {
+		userID = uuid.New().String()
+	}
 	createdAt := time.Now().UnixMilli()
 
 	_, err := db.Exec(
@@ -104,9 +117,9 @@ func handleSubmit(c *gin.Context) {
 		return
 	}
 
-	fmt.Printf("[submit] result=%s id=%s time=%d\n", req.Result, id, createdAt)
+	fmt.Printf("[submit] result=%s user_id=%s id=%s time=%d\n", req.Result, userID, id, createdAt)
 
-	c.JSON(http.StatusOK, gin.H{"success": true, "id": id})
+	c.JSON(http.StatusOK, gin.H{"success": true, "id": id, "user_id": userID})
 }
 
 func handleList(c *gin.Context) {
@@ -186,11 +199,25 @@ func handleStats(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"total": total, "byResult": byResult})
 }
 
+func adminAuth() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if adminToken == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "admin token not configured"})
+			return
+		}
+		if c.GetHeader("X-Admin-Token") != adminToken {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			return
+		}
+		c.Next()
+	}
+}
+
 func corsMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, X-Admin-Token")
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(204)
 			return

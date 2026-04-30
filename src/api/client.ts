@@ -1,4 +1,5 @@
 const STORAGE_KEY = 'questionnaire_api_base';
+const USER_ID_KEY = 'questionnaire_user_id';
 
 // Default: use Vite proxy in dev, empty in production
 const DEFAULT_BASE = import.meta.env.DEV ? '/api' : '';
@@ -17,11 +18,35 @@ export function hasApiBase(): boolean {
   return !!getApiBase();
 }
 
+function generateUUID(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
+}
+
+export function getOrCreateUserId(): string {
+  let id = localStorage.getItem(USER_ID_KEY);
+  if (!id) {
+    id = generateUUID();
+    localStorage.setItem(USER_ID_KEY, id);
+  }
+  return id;
+}
+
+export function setUserId(id: string): void {
+  localStorage.setItem(USER_ID_KEY, id);
+}
+
 interface SubmissionPayload {
   answers: string[];
   scores: Record<string, number>;
   result: string;
   source?: string;
+  user_id: string;
 }
 
 function apiUrl(path: string): string {
@@ -33,14 +58,21 @@ function apiUrl(path: string): string {
   return `${apiBase}${path}`;
 }
 
-export async function submitSubmission(payload: SubmissionPayload): Promise<{ success: boolean; id: string }> {
+export async function submitSubmission(
+  payload: Omit<SubmissionPayload, 'user_id'>
+): Promise<{ success: boolean; id: string; user_id?: string }> {
+  const userId = getOrCreateUserId();
   const res = await fetch(apiUrl('/submit'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ ...payload, user_id: userId }),
   });
   if (!res.ok) throw new Error(`Submit failed: ${res.status}`);
-  return res.json();
+  const data = await res.json();
+  if (data.user_id) {
+    setUserId(data.user_id);
+  }
+  return data;
 }
 
 export async function checkVersion(): Promise<string> {
@@ -48,4 +80,28 @@ export async function checkVersion(): Promise<string> {
   if (!res.ok) throw new Error(`Version check failed: ${res.status}`);
   const data = await res.json();
   return data.version;
+}
+
+export async function listSubmissions(adminToken: string): Promise<{ count: number; submissions: unknown[] }> {
+  const res = await fetch(apiUrl('/submissions'), {
+    headers: { 'X-Admin-Token': adminToken },
+  });
+  if (!res.ok) throw new Error(`List failed: ${res.status}`);
+  return res.json();
+}
+
+export async function exportSubmissions(adminToken: string): Promise<Blob> {
+  const res = await fetch(apiUrl('/submissions/export'), {
+    headers: { 'X-Admin-Token': adminToken },
+  });
+  if (!res.ok) throw new Error(`Export failed: ${res.status}`);
+  return res.blob();
+}
+
+export async function getStats(adminToken: string): Promise<{ total: number; byResult: { result: string; count: number }[] }> {
+  const res = await fetch(apiUrl('/stats'), {
+    headers: { 'X-Admin-Token': adminToken },
+  });
+  if (!res.ok) throw new Error(`Stats failed: ${res.status}`);
+  return res.json();
 }
