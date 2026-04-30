@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Question, UserResponse } from '../types/personality';
 import { ProgressBar } from './ProgressBar';
@@ -16,8 +16,11 @@ export const QuestionnaireScreen: React.FC<QuestionnaireScreenProps> = ({
 }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [responses, setResponses] = useState<UserResponse[]>([]);
+  const isCompletedRef = useRef(false);
 
   const handleAnswer = (value: number) => {
+    if (isCompletedRef.current) return;
+
     const newResponse: UserResponse = {
       questionId: questions[currentQuestion].id,
       value
@@ -32,6 +35,7 @@ export const QuestionnaireScreen: React.FC<QuestionnaireScreenProps> = ({
       if (currentQuestion < questions.length - 1) {
         setCurrentQuestion(currentQuestion + 1);
       } else {
+        isCompletedRef.current = true;
         onComplete(updatedResponses);
       }
     }, 500);

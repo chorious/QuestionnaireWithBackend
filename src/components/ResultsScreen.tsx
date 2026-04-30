@@ -6,12 +6,14 @@ interface ResultsScreenProps {
   result: PersonalityResult;
   nickname: string;
   onRestart: () => void;
+  submitStatus?: 'idle' | 'submitting' | 'success' | 'error';
 }
 
-export const ResultsScreen: React.FC<ResultsScreenProps> = ({ 
-  result, 
-  nickname, 
-  onRestart 
+export const ResultsScreen: React.FC<ResultsScreenProps> = ({
+  result,
+  nickname,
+  onRestart,
+  submitStatus = 'idle',
 }) => {
   const [showSharing, setShowSharing] = useState(false);
 
@@ -48,6 +50,15 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({
           <p className="text-gray-600">
             Your personality type has been revealed
           </p>
+          {submitStatus === 'submitting' && (
+            <p className="mt-2 text-sm text-blue-500">⏳ Saving result...</p>
+          )}
+          {submitStatus === 'success' && (
+            <p className="mt-2 text-sm text-green-500">✅ Result saved!</p>
+          )}
+          {submitStatus === 'error' && (
+            <p className="mt-2 text-sm text-red-500">❌ Save failed, please try again</p>
+          )}
         </div>
 
         {/* Main Result Card */}
