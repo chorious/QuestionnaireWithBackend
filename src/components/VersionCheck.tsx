@@ -1,16 +1,15 @@
 import { useEffect, useState } from 'react';
 import { APP_VERSION, VERSION_CHECK_INTERVAL } from '../config/version';
+import { checkVersion as apiCheckVersion } from '../api/client';
 
 export function VersionCheck() {
   const [outdated, setOutdated] = useState(false);
 
   useEffect(() => {
-    const checkVersion = async () => {
+    const doCheck = async () => {
       try {
-        const res = await fetch('/api/version');
-        if (!res.ok) return;
-        const data = await res.json();
-        if (data.version && data.version !== APP_VERSION) {
+        const version = await apiCheckVersion();
+        if (version && version !== APP_VERSION) {
           setOutdated(true);
         }
       } catch {
@@ -18,8 +17,8 @@ export function VersionCheck() {
       }
     };
 
-    checkVersion();
-    const timer = setInterval(checkVersion, VERSION_CHECK_INTERVAL);
+    doCheck();
+    const timer = setInterval(doCheck, VERSION_CHECK_INTERVAL);
     return () => clearInterval(timer);
   }, []);
 

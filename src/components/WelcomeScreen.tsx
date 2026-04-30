@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ChevronRight, Sparkles, Brain, Heart } from 'lucide-react';
+import { ChevronRight, Sparkles, Brain, Heart, Settings } from 'lucide-react';
+import { getApiBase, setApiBase, hasApiBase } from '../api/client';
 
 interface WelcomeScreenProps {
   onStart: (nickname: string) => void;
@@ -7,11 +8,21 @@ interface WelcomeScreenProps {
 
 export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart }) => {
   const [nickname, setNickname] = useState('');
+  const [apiBase, setApiBaseInput] = useState(getApiBase());
+  const [showConfig, setShowConfig] = useState(!hasApiBase());
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (nickname.trim()) {
       onStart(nickname.trim());
+    }
+  };
+
+  const handleSaveApiBase = () => {
+    const trimmed = apiBase.trim();
+    if (trimmed) {
+      setApiBase(trimmed);
+      setShowConfig(false);
     }
   };
 
@@ -49,6 +60,40 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart }) => {
             </div>
           </div>
 
+          {showConfig && (
+            <div className="mb-6 p-4 bg-yellow-50 rounded-xl border border-yellow-200">
+              <label className="block text-sm font-medium text-yellow-800 mb-2">
+                Backend API URL (ngrok / local)
+              </label>
+              <input
+                type="text"
+                value={apiBase}
+                onChange={(e) => setApiBaseInput(e.target.value)}
+                className="w-full px-4 py-2 rounded-lg border-2 border-yellow-300 focus:border-yellow-500 focus:outline-none transition-colors text-center mb-2"
+                placeholder="https://abc123.ngrok.io"
+              />
+              <p className="text-xs text-yellow-600 mb-3">
+                Enter your backend address. Use /api for local dev.
+              </p>
+              <button
+                onClick={handleSaveApiBase}
+                className="w-full bg-yellow-500 text-white py-2 px-4 rounded-lg font-medium hover:bg-yellow-600 transition-colors"
+              >
+                Save
+              </button>
+            </div>
+          )}
+
+          {!showConfig && (
+            <button
+              onClick={() => setShowConfig(true)}
+              className="mb-4 flex items-center justify-center space-x-1 text-sm text-gray-400 hover:text-gray-600 transition-colors mx-auto"
+            >
+              <Settings className="w-4 h-4" />
+              <span>API: {getApiBase() || 'not set'}</span>
+            </button>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="nickname" className="block text-sm font-medium text-gray-700 mb-2">
@@ -68,7 +113,8 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart }) => {
 
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-4 px-8 rounded-xl font-semibold text-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105"
+              disabled={!hasApiBase()}
+              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-4 px-8 rounded-xl font-semibold text-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span>Begin Your Journey</span>
               <ChevronRight className="w-5 h-5" />
