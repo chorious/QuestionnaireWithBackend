@@ -67,7 +67,7 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({
         </div>
 
         {/* Main Result Card */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-2xl mb-8 animate-slide-up">
+        <div className="bg-white rounded-xl p-8 shadow-lg border border-gray-100 mb-8 animate-slide-up">
           {/* Primary Type */}
           <div className="text-center mb-8">
             <div
@@ -169,7 +169,7 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <button
             onClick={() => setShowSharing(!showSharing)}
-            className="flex items-center justify-center space-x-2 px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-semibold hover:from-purple-600 hover:to-pink-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+            className="flex items-center justify-center space-x-2 px-8 py-4 bg-blue-800 text-white rounded-lg font-semibold hover:bg-blue-900 transition-all duration-300 shadow-md hover:shadow-lg"
           >
             <Share2 className="w-5 h-5" />
             <span>分享结果</span>
@@ -186,7 +186,7 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({
 
         {/* Sharing Options */}
         {showSharing && (
-          <div className="mt-6 bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl animate-slide-up">
+          <div className="mt-6 bg-white rounded-xl p-6 shadow-lg border border-gray-100 animate-slide-up">
             <h4 className="text-lg font-bold text-gray-800 mb-4 text-center">
               分享你的职业锚
             </h4>

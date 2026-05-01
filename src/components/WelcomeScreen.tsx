@@ -54,11 +54,11 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart }) => {
       <div className="max-w-2xl w-full text-center">
         <div className="mb-12 animate-fade-in">
           <div className="flex items-center justify-center mb-6">
-            <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-4 rounded-full">
+            <div className="bg-blue-800 p-4 rounded-xl">
               <Brain className="w-12 h-12 text-white" />
             </div>
           </div>
-          <h1 className="text-6xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
+          <h1 className="text-5xl font-bold text-blue-900 mb-4">
             职业锚测评
           </h1>
           <p className="text-xl text-gray-600 max-w-lg mx-auto leading-relaxed">
@@ -66,17 +66,17 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart }) => {
           </p>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-2xl mb-8 animate-slide-up">
+        <div className="bg-white rounded-xl p-8 shadow-lg border border-gray-100 mb-8 animate-slide-up">
           <div className="flex items-center justify-center space-x-8 mb-8">
-            <div className="flex items-center space-x-2 text-purple-600">
+            <div className="flex items-center space-x-2 text-blue-700">
               <Sparkles className="w-5 h-5" />
               <span className="text-sm font-medium">10 道题</span>
             </div>
-            <div className="flex items-center space-x-2 text-pink-600">
+            <div className="flex items-center space-x-2 text-blue-700">
               <Heart className="w-5 h-5" />
               <span className="text-sm font-medium">3 分钟</span>
             </div>
-            <div className="flex items-center space-x-2 text-indigo-600">
+            <div className="flex items-center space-x-2 text-blue-700">
               <Brain className="w-5 h-5" />
               <span className="text-sm font-medium">8 种职业锚</span>
             </div>
@@ -126,7 +126,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart }) => {
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className={`w-full px-4 py-3 rounded-xl border-2 ${errors.name ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-purple-500'} focus:outline-none transition-colors text-lg text-center`}
+                className={`w-full px-4 py-3 rounded-lg border-2 ${errors.name ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-blue-700'} focus:outline-none transition-colors text-lg text-center`}
                 placeholder="请输入中文姓名"
                 maxLength={10}
               />
@@ -144,7 +144,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart }) => {
                 id="phone"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className={`w-full px-4 py-3 rounded-xl border-2 ${errors.phone ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-purple-500'} focus:outline-none transition-colors text-lg text-center`}
+                className={`w-full px-4 py-3 rounded-lg border-2 ${errors.phone ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-blue-700'} focus:outline-none transition-colors text-lg text-center`}
                 placeholder="请输入手机号码"
                 maxLength={16}
               />
@@ -156,7 +156,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart }) => {
             <button
               type="submit"
               disabled={!hasApiBase()}
-              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-4 px-8 rounded-xl font-semibold text-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-blue-800 text-white py-4 px-8 rounded-lg font-semibold text-lg hover:bg-blue-900 transition-all duration-300 flex items-center justify-center space-x-2 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span>开始测评</span>
               <ChevronRight className="w-5 h-5" />

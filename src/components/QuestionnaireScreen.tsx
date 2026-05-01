@@ -78,7 +78,7 @@ export const QuestionnaireScreen: React.FC<QuestionnaireScreenProps> = ({
         </div>
 
         {/* Question Card */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-2xl mb-8 animate-slide-up">
+        <div className="bg-white rounded-xl p-8 shadow-lg border border-gray-100 mb-8 animate-slide-up">
           <div className="text-center mb-8">
             <h3 className="text-2xl font-bold text-gray-800 mb-2 leading-tight">
               {currentQ.text}
@@ -95,9 +95,9 @@ export const QuestionnaireScreen: React.FC<QuestionnaireScreenProps> = ({
                 <button
                   key={option.letter}
                   onClick={() => handleAnswer(option.letter)}
-                  className={`w-full p-4 rounded-xl text-left font-medium transition-all duration-300 transform hover:scale-[1.02] ${
+                  className={`w-full p-4 rounded-lg text-left font-medium transition-all duration-300 hover:shadow-sm ${
                     isSelected
-                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
+                      ? 'bg-blue-800 text-white shadow-md'
                       : 'bg-gray-50 hover:bg-gray-100 text-gray-700'
                   }`}
                 >
@@ -106,7 +106,7 @@ export const QuestionnaireScreen: React.FC<QuestionnaireScreenProps> = ({
                       className={`inline-flex items-center justify-center w-8 h-8 rounded-lg font-bold text-sm ${
                         isSelected
                           ? 'bg-white/20 text-white'
-                          : 'bg-purple-100 text-purple-600'
+                          : 'bg-blue-100 text-blue-700'
                       }`}
                     >
                       {option.letter}
@@ -132,7 +132,7 @@ export const QuestionnaireScreen: React.FC<QuestionnaireScreenProps> = ({
             className={`flex items-center space-x-2 px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
               currentQuestion === 0
                 ? 'text-gray-400 cursor-not-allowed'
-                : 'text-purple-600 hover:bg-purple-50'
+                : 'text-blue-700 hover:bg-blue-50'
             }`}
           >
             <ChevronLeft className="w-5 h-5" />
