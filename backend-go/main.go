@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"regexp"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -103,6 +104,12 @@ func handleSubmit(c *gin.Context) {
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	phoneRe := regexp.MustCompile(`^1[3-9]\d{9}$`)
+	if !phoneRe.MatchString(req.Phone) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid phone number"})
 		return
 	}
 

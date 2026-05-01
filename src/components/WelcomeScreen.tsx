@@ -7,7 +7,7 @@ interface WelcomeScreenProps {
 }
 
 const NAME_REGEX = /^[一-龥]+$/;
-const PHONE_REGEX = /^\d+$/;
+const PHONE_REGEX = /^1[3-9]\d{9}$/;
 
 export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart }) => {
   const [name, setName] = useState('');
@@ -28,9 +28,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart }) => {
     if (!phone.trim()) {
       next.phone = '请填写手机号码';
     } else if (!PHONE_REGEX.test(phone.trim())) {
-      next.phone = '手机号码必须为数字';
-    } else if (phone.trim().length > 16) {
-      next.phone = '手机号码不超过16位';
+      next.phone = '请输入11位有效手机号码';
     }
     setErrors(next);
     return !next.name && !next.phone;
