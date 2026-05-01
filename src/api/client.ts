@@ -47,6 +47,8 @@ interface SubmissionPayload {
   result: string;
   source?: string;
   user_id: string;
+  name: string;
+  phone: string;
 }
 
 function apiUrl(path: string): string {

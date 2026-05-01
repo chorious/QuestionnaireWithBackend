@@ -3,18 +3,43 @@ import { ChevronRight, Sparkles, Brain, Heart, Settings } from 'lucide-react';
 import { getApiBase, setApiBase, hasApiBase } from '../api/client';
 
 interface WelcomeScreenProps {
-  onStart: (nickname: string) => void;
+  onStart: (name: string, phone: string) => void;
 }
 
+const NAME_REGEX = /^[一-龥]+$/;
+const PHONE_REGEX = /^\d+$/;
+
 export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart }) => {
-  const [nickname, setNickname] = useState('');
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [errors, setErrors] = useState<{ name?: string; phone?: string }>({});
   const [apiBase, setApiBaseInput] = useState(getApiBase());
   const [showConfig, setShowConfig] = useState(!hasApiBase());
 
+  const validate = (): boolean => {
+    const next: { name?: string; phone?: string } = {};
+    if (!name.trim()) {
+      next.name = '请填写姓名';
+    } else if (!NAME_REGEX.test(name.trim())) {
+      next.name = '姓名必须为中文';
+    } else if (name.trim().length > 10) {
+      next.name = '姓名不超过10个字符';
+    }
+    if (!phone.trim()) {
+      next.phone = '请填写手机号码';
+    } else if (!PHONE_REGEX.test(phone.trim())) {
+      next.phone = '手机号码必须为数字';
+    } else if (phone.trim().length > 16) {
+      next.phone = '手机号码不超过16位';
+    }
+    setErrors(next);
+    return !next.name && !next.phone;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (nickname.trim()) {
-      onStart(nickname.trim());
+    if (validate()) {
+      onStart(name.trim(), phone.trim());
     }
   };
 
@@ -93,21 +118,41 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart }) => {
             </button>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="nickname" className="block text-sm font-medium text-gray-700 mb-2">
-                怎么称呼你？
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                姓名
               </label>
               <input
                 type="text"
-                id="nickname"
-                value={nickname}
-                onChange={(e) => setNickname(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:outline-none transition-colors text-lg text-center"
-                placeholder="输入昵称"
-                maxLength={20}
-                required
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className={`w-full px-4 py-3 rounded-xl border-2 ${errors.name ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-purple-500'} focus:outline-none transition-colors text-lg text-center`}
+                placeholder="请输入中文姓名"
+                maxLength={10}
               />
+              {errors.name && (
+                <p className="mt-1 text-sm text-red-500 text-center">{errors.name}</p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                手机号码
+              </label>
+              <input
+                type="text"
+                id="phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className={`w-full px-4 py-3 rounded-xl border-2 ${errors.phone ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-purple-500'} focus:outline-none transition-colors text-lg text-center`}
+                placeholder="请输入手机号码"
+                maxLength={16}
+              />
+              {errors.phone && (
+                <p className="mt-1 text-sm text-red-500 text-center">{errors.phone}</p>
+              )}
             </div>
 
             <button

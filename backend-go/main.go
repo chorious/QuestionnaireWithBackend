@@ -82,6 +82,9 @@ func initDB() {
 		fmt.Println("init db failed:", err)
 		os.Exit(1)
 	}
+	// Migrate: add name and phone columns if not exist (backward compatible)
+	_, _ = db.Exec("ALTER TABLE submissions ADD COLUMN name TEXT DEFAULT ''")
+	_, _ = db.Exec("ALTER TABLE submissions ADD COLUMN phone TEXT DEFAULT ''")
 }
 
 func handleVersion(c *gin.Context) {
@@ -95,6 +98,8 @@ func handleSubmit(c *gin.Context) {
 		Result  string         `json:"result"`
 		Source  string         `json:"source"`
 		UserID  string         `json:"user_id"`
+		Name    string         `json:"name"`
+		Phone   string         `json:"phone"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -109,21 +114,21 @@ func handleSubmit(c *gin.Context) {
 	createdAt := time.Now().UnixMilli()
 
 	_, err := db.Exec(
-		"INSERT INTO submissions (id, user_id, answers, scores, result, created_at, source) VALUES (?, ?, ?, ?, ?, ?, ?)",
-		id, userID, toJSON(req.Answers), toJSON(req.Scores), req.Result, createdAt, req.Source,
+		"INSERT INTO submissions (id, user_id, answers, scores, result, created_at, source, name, phone) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		id, userID, toJSON(req.Answers), toJSON(req.Scores), req.Result, createdAt, req.Source, req.Name, req.Phone,
 	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	fmt.Printf("[submit] result=%s user_id=%s id=%s time=%d\n", req.Result, userID, id, createdAt)
+	fmt.Printf("[submit] result=%s user_id=%s name=%s id=%s time=%d\n", req.Result, userID, req.Name, id, createdAt)
 
 	c.JSON(http.StatusOK, gin.H{"success": true, "id": id, "user_id": userID})
 }
 
 func handleList(c *gin.Context) {
-	rows, err := db.Query("SELECT id, user_id, answers, scores, result, created_at, source FROM submissions ORDER BY created_at DESC LIMIT 10000")
+	rows, err := db.Query("SELECT id, user_id, answers, scores, result, created_at, source, name, phone FROM submissions ORDER BY created_at DESC LIMIT 10000")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -132,9 +137,9 @@ func handleList(c *gin.Context) {
 
 	var submissions []map[string]any
 	for rows.Next() {
-		var id, userID, answers, scores, result, source string
+		var id, userID, answers, scores, result, source, name, phone string
 		var createdAt int64
-		if err := rows.Scan(&id, &userID, &answers, &scores, &result, &createdAt, &source); err != nil {
+		if err := rows.Scan(&id, &userID, &answers, &scores, &result, &createdAt, &source, &name, &phone); err != nil {
 			continue
 		}
 		submissions = append(submissions, map[string]any{
@@ -145,6 +150,8 @@ func handleList(c *gin.Context) {
 			"result":     result,
 			"created_at": createdAt,
 			"source":     source,
+			"name":       name,
+			"phone":      phone,
 		})
 	}
 
@@ -152,7 +159,7 @@ func handleList(c *gin.Context) {
 }
 
 func handleExport(c *gin.Context) {
-	rows, err := db.Query("SELECT id, user_id, answers, scores, result, created_at, source FROM submissions ORDER BY created_at DESC")
+	rows, err := db.Query("SELECT id, user_id, answers, scores, result, created_at, source, name, phone FROM submissions ORDER BY created_at DESC")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -163,15 +170,15 @@ func handleExport(c *gin.Context) {
 	c.Header("Content-Disposition", "attachment; filename=\"submissions.csv\"")
 
 	writer := csv.NewWriter(c.Writer)
-	writer.Write([]string{"id", "user_id", "result", "created_at", "source", "answers", "scores"})
+	writer.Write([]string{"id", "user_id", "name", "phone", "result", "created_at", "source", "answers", "scores"})
 
 	for rows.Next() {
-		var id, userID, answers, scores, result, source string
+		var id, userID, answers, scores, result, source, name, phone string
 		var createdAt int64
-		if err := rows.Scan(&id, &userID, &answers, &scores, &result, &createdAt, &source); err != nil {
+		if err := rows.Scan(&id, &userID, &answers, &scores, &result, &createdAt, &source, &name, &phone); err != nil {
 			continue
 		}
-		writer.Write([]string{id, userID, result, time.UnixMilli(createdAt).Format(time.RFC3339), source, answers, scores})
+		writer.Write([]string{id, userID, name, phone, result, time.UnixMilli(createdAt).Format(time.RFC3339), source, answers, scores})
 	}
 	writer.Flush()
 }

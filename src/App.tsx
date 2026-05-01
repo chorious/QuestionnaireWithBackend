@@ -13,12 +13,14 @@ type AppState = 'welcome' | 'questionnaire' | 'results';
 
 function App() {
   const [appState, setAppState] = useState<AppState>('welcome');
-  const [nickname, setNickname] = useState('');
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const [result, setResult] = useState<CareerAnchorResult | null>(null);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
 
-  const handleStart = (userNickname: string) => {
-    setNickname(userNickname);
+  const handleStart = (userName: string, userPhone: string) => {
+    setName(userName);
+    setPhone(userPhone);
     setAppState('questionnaire');
   };
 
@@ -33,6 +35,8 @@ function App() {
         answers: responses.map(r => r.value),
         scores: anchorResult.scores,
         result: anchorResult.primary,
+        name,
+        phone,
       });
       setSubmitStatus('success');
     } catch (err) {
@@ -43,7 +47,8 @@ function App() {
 
   const handleRestart = () => {
     setAppState('welcome');
-    setNickname('');
+    setName('');
+    setPhone('');
     setResult(null);
   };
 
@@ -60,14 +65,14 @@ function App() {
         <QuestionnaireScreen
           questions={questions}
           onComplete={handleQuestionnaireComplete}
-          nickname={nickname}
+          nickname={name}
         />
       )}
 
       {appState === 'results' && result && (
         <ResultsScreen
           result={result}
-          nickname={nickname}
+          nickname={name}
           onRestart={handleRestart}
           submitStatus={submitStatus}
         />
