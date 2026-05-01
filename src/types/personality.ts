@@ -1,16 +1,21 @@
+export interface QuestionOption {
+  letter: string;
+  text: string;
+  anchor: string;
+}
+
 export interface Question {
   id: number;
   text: string;
-  dimension: 'EI' | 'SN' | 'TF' | 'JP';
-  reverse?: boolean;
+  options: QuestionOption[];
 }
 
-export interface PersonalityType {
+export interface CareerAnchor {
   code: string;
   name: string;
+  englishName: string;
   description: string;
   traits: string[];
-  strengths: string[];
   careers: string[];
   color: string;
   emoji: string;
@@ -18,15 +23,13 @@ export interface PersonalityType {
 
 export interface UserResponse {
   questionId: number;
-  value: number; // 1-5 scale
+  value: string; // 'A' ~ 'H'
 }
 
-export interface PersonalityResult {
-  type: PersonalityType;
-  scores: {
-    EI: number; // Positive = Extraverted, Negative = Introverted
-    SN: number; // Positive = Sensing, Negative = Intuitive
-    TF: number; // Positive = Thinking, Negative = Feeling
-    JP: number; // Positive = Judging, Negative = Perceiving
-  };
+export interface CareerAnchorResult {
+  type: CareerAnchor;
+  secondaryType: CareerAnchor | null;
+  primary: string; // e.g. "TF" or "TF+SV"
+  scores: Record<string, number>; // anchor counts: { TF: 3, GM: 2, ... }
+  counts: Record<string, number>; // raw letter counts: { A: 3, B: 2, ... }
 }

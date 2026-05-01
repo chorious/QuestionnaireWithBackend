@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
-import { Share2, Download, RefreshCw, Twitter, Facebook, Linkedin } from 'lucide-react';
-import { PersonalityResult } from '../types/personality';
+import { Share2, RefreshCw, Twitter, Facebook, Linkedin } from 'lucide-react';
+import { CareerAnchorResult, CareerAnchor } from '../types/personality';
+import { careerAnchors } from '../data/personalityTypes';
 
 interface ResultsScreenProps {
-  result: PersonalityResult;
+  result: CareerAnchorResult;
   nickname: string;
   onRestart: () => void;
   submitStatus?: 'idle' | 'submitting' | 'success' | 'error';
 }
+
+const ANCHOR_ORDER = ['TF', 'GM', 'AU', 'SE', 'EC', 'SV', 'CH', 'LS'];
 
 export const ResultsScreen: React.FC<ResultsScreenProps> = ({
   result,
@@ -17,27 +20,31 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({
 }) => {
   const [showSharing, setShowSharing] = useState(false);
 
-  const shareText = `I just discovered I'm ${result.type.name} (${result.type.code})! Find out your personality type too.`;
+  const isDual = result.secondaryType !== null;
+  const shareText = isDual
+    ? `我的职业锚是「${result.type.name} + ${result.secondaryType!.name}」！来测测你的职业锚是什么？`
+    : `我的职业锚是「${result.type.name}」！来测测你的职业锚是什么？`;
   const shareUrl = window.location.href;
 
   const handleShare = (platform: string) => {
     const urls = {
       twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`,
       facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
-      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`
+      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`,
     };
-
     window.open(urls[platform as keyof typeof urls], '_blank', 'width=600,height=400');
   };
 
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
-      alert('Copied to clipboard!');
+      alert('已复制到剪贴板！');
     } catch (err) {
       console.error('Failed to copy:', err);
     }
   };
+
+  const maxScore = Math.max(...ANCHOR_ORDER.map((c) => result.scores[c] ?? 0));
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
@@ -45,90 +52,87 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({
         {/* Result Header */}
         <div className="text-center mb-8 animate-fade-in">
           <h2 className="text-3xl font-bold text-gray-800 mb-2">
-            Congratulations, {nickname}! 🎉
+            恭喜，{nickname}！🎉
           </h2>
-          <p className="text-gray-600">
-            Your personality type has been revealed
-          </p>
+          <p className="text-gray-600">你的职业锚已揭晓</p>
           {submitStatus === 'submitting' && (
-            <p className="mt-2 text-sm text-blue-500">⏳ Saving result...</p>
+            <p className="mt-2 text-sm text-blue-500">⏳ 正在保存结果...</p>
           )}
           {submitStatus === 'success' && (
-            <p className="mt-2 text-sm text-green-500">✅ Result saved!</p>
+            <p className="mt-2 text-sm text-green-500">✅ 结果已保存！</p>
           )}
           {submitStatus === 'error' && (
-            <p className="mt-2 text-sm text-red-500">❌ Save failed, please try again</p>
+            <p className="mt-2 text-sm text-red-500">❌ 保存失败，请重试</p>
           )}
         </div>
 
         {/* Main Result Card */}
         <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-2xl mb-8 animate-slide-up">
+          {/* Primary Type */}
           <div className="text-center mb-8">
-            <div 
+            <div
               className="inline-block p-6 rounded-full mb-4 text-6xl"
               style={{ backgroundColor: `${result.type.color}20` }}
             >
               {result.type.emoji}
             </div>
-            <h3 className="text-4xl font-bold mb-2" style={{ color: result.type.color }}>
+            <h3
+              className="text-4xl font-bold mb-2"
+              style={{ color: result.type.color }}
+            >
               {result.type.name}
             </h3>
+            <p className="text-lg text-gray-500 mb-2">
+              {result.type.englishName}
+            </p>
             <div className="text-2xl font-mono font-bold text-gray-600 mb-4">
-              {result.type.code}
+              {result.primary}
             </div>
             <p className="text-lg text-gray-700 leading-relaxed max-w-2xl mx-auto">
               {result.type.description}
             </p>
           </div>
 
-          {/* Traits Grid */}
-          <div className="grid md:grid-cols-2 gap-8 mb-8">
-            <div>
-              <h4 className="text-xl font-bold text-gray-800 mb-4">Key Traits</h4>
-              <div className="space-y-2">
-                {result.type.traits.map((trait, index) => (
-                  <div 
-                    key={index}
-                    className="flex items-center space-x-2 text-gray-700"
-                  >
-                    <div 
-                      className="w-2 h-2 rounded-full"
-                      style={{ backgroundColor: result.type.color }}
-                    />
-                    <span>{trait}</span>
-                  </div>
-                ))}
+          {/* Secondary Type (if dual) */}
+          {isDual && result.secondaryType && (
+            <div className="border-t pt-6 mb-6">
+              <div className="text-center">
+                <p className="text-sm text-gray-500 mb-3">
+                  你是「双锚型」，同时具有两种核心驱动力：
+                </p>
+                <div className="inline-flex items-center space-x-4 bg-gray-50 rounded-2xl px-6 py-4">
+                  <AnchorBadge anchor={result.type} />
+                  <span className="text-2xl text-gray-400">+</span>
+                  <AnchorBadge anchor={result.secondaryType} />
+                </div>
               </div>
             </div>
+          )}
 
-            <div>
-              <h4 className="text-xl font-bold text-gray-800 mb-4">Strengths</h4>
-              <div className="space-y-2">
-                {result.type.strengths.map((strength, index) => (
-                  <div 
-                    key={index}
-                    className="flex items-center space-x-2 text-gray-700"
-                  >
-                    <div 
-                      className="w-2 h-2 rounded-full"
-                      style={{ backgroundColor: result.type.color }}
-                    />
-                    <span>{strength}</span>
-                  </div>
-                ))}
-              </div>
+          {/* Traits */}
+          <div className="border-t pt-8 mb-8">
+            <h4 className="text-xl font-bold text-gray-800 mb-4">核心特征</h4>
+            <div className="flex flex-wrap gap-2">
+              {result.type.traits.map((trait, index) => (
+                <span
+                  key={index}
+                  className="px-4 py-2 rounded-full text-sm font-medium text-white"
+                  style={{ backgroundColor: result.type.color }}
+                >
+                  {trait}
+                </span>
+              ))}
             </div>
           </div>
 
           {/* Career Suggestions */}
           <div className="mb-8">
-            <h4 className="text-xl font-bold text-gray-800 mb-4">Career Suggestions</h4>
+            <h4 className="text-xl font-bold text-gray-800 mb-4">适合的职业方向</h4>
             <div className="flex flex-wrap gap-2">
               {result.type.careers.map((career, index) => (
-                <span 
+                <span
                   key={index}
-                  className="px-4 py-2 rounded-full text-sm font-medium text-white"
-                  style={{ backgroundColor: result.type.color }}
+                  className="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700"
                 >
                   {career}
                 </span>
@@ -136,14 +140,27 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({
             </div>
           </div>
 
-          {/* Personality Dimensions */}
+          {/* Score Distribution */}
           <div className="border-t pt-8">
-            <h4 className="text-xl font-bold text-gray-800 mb-4">Your Personality Dimensions</h4>
-            <div className="grid md:grid-cols-2 gap-4">
-              <DimensionBar label="Energy" positive="Extraverted" negative="Introverted" score={result.scores.EI} />
-              <DimensionBar label="Information" positive="Sensing" negative="Intuitive" score={result.scores.SN} />
-              <DimensionBar label="Decisions" positive="Thinking" negative="Feeling" score={result.scores.TF} />
-              <DimensionBar label="Structure" positive="Judging" negative="Perceiving" score={result.scores.JP} />
+            <h4 className="text-xl font-bold text-gray-800 mb-4">
+              8 种职业锚得分分布
+            </h4>
+            <div className="space-y-3">
+              {ANCHOR_ORDER.map((code) => {
+                const anchor = careerAnchors.find((a) => a.code === code)!;
+                const score = result.scores[code] ?? 0;
+                const pct = maxScore > 0 ? (score / maxScore) * 100 : 0;
+                const isTop = score === maxScore && maxScore > 0;
+                return (
+                  <ScoreBar
+                    key={code}
+                    anchor={anchor}
+                    score={score}
+                    pct={pct}
+                    isTop={isTop}
+                  />
+                );
+              })}
             </div>
           </div>
         </div>
@@ -155,15 +172,15 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({
             className="flex items-center justify-center space-x-2 px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-semibold hover:from-purple-600 hover:to-pink-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
           >
             <Share2 className="w-5 h-5" />
-            <span>Share Results</span>
+            <span>分享结果</span>
           </button>
-          
+
           <button
             onClick={onRestart}
             className="flex items-center justify-center space-x-2 px-8 py-4 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all duration-300"
           >
             <RefreshCw className="w-5 h-5" />
-            <span>Take Again</span>
+            <span>再测一次</span>
           </button>
         </div>
 
@@ -171,7 +188,7 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({
         {showSharing && (
           <div className="mt-6 bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl animate-slide-up">
             <h4 className="text-lg font-bold text-gray-800 mb-4 text-center">
-              Share Your Results
+              分享你的职业锚
             </h4>
             <div className="flex flex-wrap gap-4 justify-center">
               <button
@@ -181,7 +198,7 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({
                 <Twitter className="w-5 h-5" />
                 <span>Twitter</span>
               </button>
-              
+
               <button
                 onClick={() => handleShare('facebook')}
                 className="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
@@ -189,7 +206,7 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({
                 <Facebook className="w-5 h-5" />
                 <span>Facebook</span>
               </button>
-              
+
               <button
                 onClick={() => handleShare('linkedin')}
                 className="flex items-center space-x-2 px-6 py-3 bg-blue-800 text-white rounded-xl hover:bg-blue-900 transition-colors"
@@ -197,13 +214,13 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({
                 <Linkedin className="w-5 h-5" />
                 <span>LinkedIn</span>
               </button>
-              
+
               <button
                 onClick={copyToClipboard}
                 className="flex items-center space-x-2 px-6 py-3 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-colors"
               >
-                <Download className="w-5 h-5" />
-                <span>Copy Link</span>
+                <Share2 className="w-5 h-5" />
+                <span>复制链接</span>
               </button>
             </div>
           </div>
@@ -213,28 +230,56 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({
   );
 };
 
-// Each dimension has 8 questions, max score per question is ±2
-const MAX_DIM_SCORE = 8 * 2;
-
-function DimensionBar({ label, positive, negative, score }: {
-  label: string;
-  positive: string;
-  negative: string;
-  score: number;
-}) {
-  const pct = Math.min(100, Math.abs(score) / MAX_DIM_SCORE * 50 + 50);
+function AnchorBadge({ anchor }: { anchor: CareerAnchor }) {
   return (
-    <div className="bg-gray-50 p-4 rounded-xl">
-      <div className="flex justify-between items-center mb-2">
-        <span className="font-medium">{label}</span>
-        <span className="text-sm text-gray-600">{score >= 0 ? positive : negative}</span>
+    <div className="flex items-center space-x-2">
+      <span className="text-2xl">{anchor.emoji}</span>
+      <div>
+        <div className="font-bold" style={{ color: anchor.color }}>
+          {anchor.name}
+        </div>
+        <div className="text-xs text-gray-500">{anchor.englishName}</div>
       </div>
-      <div className="w-full bg-gray-200 rounded-full h-2">
-        <div
-          className="h-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"
-          style={{ width: `${pct}%` }}
-        />
+    </div>
+  );
+}
+
+function ScoreBar({
+  anchor,
+  score,
+  pct,
+  isTop,
+}: {
+  anchor: CareerAnchor;
+  score: number;
+  pct: number;
+  isTop: boolean;
+}) {
+  return (
+    <div className="flex items-center space-x-3">
+      <div className="w-8 text-center text-lg">{anchor.emoji}</div>
+      <div className="w-16 font-bold text-sm" style={{ color: anchor.color }}>
+        {anchor.code}
       </div>
+      <div className="flex-1">
+        <div className="w-full bg-gray-200 rounded-full h-3">
+          <div
+            className="h-3 rounded-full transition-all duration-500"
+            style={{
+              width: `${Math.max(pct, 5)}%`,
+              backgroundColor: anchor.color,
+            }}
+          />
+        </div>
+      </div>
+      <div className="w-8 text-right font-bold text-sm text-gray-700">
+        {score}
+      </div>
+      {isTop && (
+        <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">
+          TOP
+        </span>
+      )}
     </div>
   );
 }

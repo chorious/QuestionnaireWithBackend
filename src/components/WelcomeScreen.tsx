@@ -36,11 +36,10 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart }) => {
             </div>
           </div>
           <h1 className="text-6xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
-            Personality Discover
+            职业锚测评
           </h1>
           <p className="text-xl text-gray-600 max-w-lg mx-auto leading-relaxed">
-            Unlock the secrets of your personality with our comprehensive
-            Myers-Briggs Type Indicator assessment
+            发现你的职业驱动力——基于 Schein 职业锚理论的 10 题快速测评
           </p>
         </div>
 
@@ -48,22 +47,22 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart }) => {
           <div className="flex items-center justify-center space-x-8 mb-8">
             <div className="flex items-center space-x-2 text-purple-600">
               <Sparkles className="w-5 h-5" />
-              <span className="text-sm font-medium">32 Questions</span>
+              <span className="text-sm font-medium">10 道题</span>
             </div>
             <div className="flex items-center space-x-2 text-pink-600">
               <Heart className="w-5 h-5" />
-              <span className="text-sm font-medium">5 Minutes</span>
+              <span className="text-sm font-medium">3 分钟</span>
             </div>
             <div className="flex items-center space-x-2 text-indigo-600">
               <Brain className="w-5 h-5" />
-              <span className="text-sm font-medium">16 Types</span>
+              <span className="text-sm font-medium">8 种职业锚</span>
             </div>
           </div>
 
           {showConfig && (
             <div className="mb-6 p-4 bg-yellow-50 rounded-xl border border-yellow-200">
               <label className="block text-sm font-medium text-yellow-800 mb-2">
-                Backend API URL (ngrok / local)
+                后端 API 地址（ngrok / local）
               </label>
               <input
                 type="text"
@@ -73,13 +72,13 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart }) => {
                 placeholder="https://abc123.ngrok.io"
               />
               <p className="text-xs text-yellow-600 mb-3">
-                Enter your backend address. Use /api for local dev.
+                输入后端地址。本地开发使用 /api。
               </p>
               <button
                 onClick={handleSaveApiBase}
                 className="w-full bg-yellow-500 text-white py-2 px-4 rounded-lg font-medium hover:bg-yellow-600 transition-colors"
               >
-                Save
+                保存
               </button>
             </div>
           )}
@@ -97,7 +96,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart }) => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="nickname" className="block text-sm font-medium text-gray-700 mb-2">
-                What should we call you?
+                怎么称呼你？
               </label>
               <input
                 type="text"
@@ -105,7 +104,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart }) => {
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:outline-none transition-colors text-lg text-center"
-                placeholder="Enter your nickname"
+                placeholder="输入昵称"
                 maxLength={20}
                 required
               />
@@ -116,14 +115,14 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart }) => {
               disabled={!hasApiBase()}
               className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-4 px-8 rounded-xl font-semibold text-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span>Begin Your Journey</span>
+              <span>开始测评</span>
               <ChevronRight className="w-5 h-5" />
             </button>
           </form>
         </div>
 
         <div className="text-sm text-gray-500 animate-fade-in-delay">
-          <p>This assessment will help you understand your personality preferences and how you interact with the world. <a href="https://github.com/Spandan-Bhattarai/Personality-Traits-Tester">Click here for the source code by Spandan</a></p>
+          <p>职业锚（Career Anchor）是 Edgar Schein 提出的概念，指一个人在职业选择中最不愿放弃的核心要素。本测评基于 8 种经典职业锚模型设计。</p>
         </div>
       </div>
     </div>

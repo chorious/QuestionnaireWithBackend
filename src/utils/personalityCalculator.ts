@@ -1,45 +1,51 @@
-import { UserResponse, PersonalityResult } from '../types/personality';
+import { UserResponse, CareerAnchorResult } from '../types/personality';
 import { questions } from '../data/questions';
-import { personalityTypes } from '../data/personalityTypes';
+import { careerAnchors } from '../data/personalityTypes';
 
-export function calculatePersonalityType(responses: UserResponse[]): PersonalityResult {
-  const scores = {
-    EI: 0, // Positive = Extraverted, Negative = Introverted
-    SN: 0, // Positive = Sensing, Negative = Intuitive
-    TF: 0, // Positive = Thinking, Negative = Feeling
-    JP: 0  // Positive = Judging, Negative = Perceiving
-  };
+const LETTER_TO_ANCHOR: Record<string, string> = {
+  A: 'TF', B: 'GM', C: 'AU', D: 'SE',
+  E: 'EC', F: 'SV', G: 'CH', H: 'LS',
+};
 
-  responses.forEach(response => {
-    const question = questions.find(q => q.id === response.questionId);
-    if (!question) return;
+const ANCHOR_CODES = ['TF', 'GM', 'AU', 'SE', 'EC', 'SV', 'CH', 'LS'];
 
-    // Convert 1-5 scale to -2 to +2 scale
-    let score = response.value - 3;
-    
-    // Reverse scoring if needed
-    if (question.reverse) {
-      score = -score;
-    }
-
-    scores[question.dimension] += score;
-  });
-
-  // Determine personality type code
-  const typeCode = 
-    (scores.EI >= 0 ? 'E' : 'I') +
-    (scores.SN >= 0 ? 'S' : 'N') +
-    (scores.TF >= 0 ? 'T' : 'F') +
-    (scores.JP >= 0 ? 'J' : 'P');
-
-  const personalityType = personalityTypes.find(type => type.code === typeCode);
-  
-  if (!personalityType) {
-    throw new Error(`Unknown personality type: ${typeCode}`);
+export function calculateCareerAnchor(responses: UserResponse[]): CareerAnchorResult {
+  // Count raw letter selections
+  const counts: Record<string, number> = {};
+  for (const code of ANCHOR_CODES) {
+    counts[code] = 0;
   }
 
+  for (const response of responses) {
+    const anchor = LETTER_TO_ANCHOR[response.value];
+    if (anchor) {
+      counts[anchor]++;
+    }
+  }
+
+  // Find max count
+  let maxCount = 0;
+  for (const code of ANCHOR_CODES) {
+    if (counts[code] > maxCount) {
+      maxCount = counts[code];
+    }
+  }
+
+  // Find all anchors tied at max
+  const topAnchors = ANCHOR_CODES.filter(code => counts[code] === maxCount);
+
+  const primaryType = careerAnchors.find(a => a.code === topAnchors[0])!;
+  const secondaryType = topAnchors.length > 1
+    ? careerAnchors.find(a => a.code === topAnchors[1])!
+    : null;
+
+  const primary = topAnchors.join('+');
+
   return {
-    type: personalityType,
-    scores
+    type: primaryType,
+    secondaryType,
+    primary,
+    scores: { ...counts },
+    counts: { ...counts },
   };
 }

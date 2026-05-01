@@ -5,8 +5,8 @@ import { ResultsScreen } from './components/ResultsScreen';
 import { BackgroundAnimation } from './components/BackgroundAnimation';
 import { VersionCheck } from './components/VersionCheck';
 import { questions } from './data/questions';
-import { calculatePersonalityType } from './utils/personalityCalculator';
-import { UserResponse, PersonalityResult } from './types/personality';
+import { calculateCareerAnchor } from './utils/personalityCalculator';
+import { UserResponse, CareerAnchorResult } from './types/personality';
 import { submitSubmission } from './api/client';
 
 type AppState = 'welcome' | 'questionnaire' | 'results';
@@ -14,7 +14,7 @@ type AppState = 'welcome' | 'questionnaire' | 'results';
 function App() {
   const [appState, setAppState] = useState<AppState>('welcome');
   const [nickname, setNickname] = useState('');
-  const [result, setResult] = useState<PersonalityResult | null>(null);
+  const [result, setResult] = useState<CareerAnchorResult | null>(null);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
 
   const handleStart = (userNickname: string) => {
@@ -23,16 +23,16 @@ function App() {
   };
 
   const handleQuestionnaireComplete = async (responses: UserResponse[]) => {
-    const personalityResult = calculatePersonalityType(responses);
-    setResult(personalityResult);
+    const anchorResult = calculateCareerAnchor(responses);
+    setResult(anchorResult);
     setAppState('results');
     setSubmitStatus('submitting');
 
     try {
       await submitSubmission({
-        answers: responses.map(r => String(r.value)),
-        scores: personalityResult.scores,
-        result: personalityResult.type.code,
+        answers: responses.map(r => r.value),
+        scores: anchorResult.scores,
+        result: anchorResult.primary,
       });
       setSubmitStatus('success');
     } catch (err) {
@@ -51,19 +51,19 @@ function App() {
     <div className="min-h-screen relative">
       <BackgroundAnimation />
       <VersionCheck />
-      
+
       {appState === 'welcome' && (
         <WelcomeScreen onStart={handleStart} />
       )}
-      
+
       {appState === 'questionnaire' && (
-        <QuestionnaireScreen 
+        <QuestionnaireScreen
           questions={questions}
           onComplete={handleQuestionnaireComplete}
           nickname={nickname}
         />
       )}
-      
+
       {appState === 'results' && result && (
         <ResultsScreen
           result={result}
