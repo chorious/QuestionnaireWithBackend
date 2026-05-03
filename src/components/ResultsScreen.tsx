@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { Share2, RefreshCw, Twitter, Facebook, Linkedin, Download } from 'lucide-react';
+import { Share2, RefreshCw, Download, Link2 } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import { CareerAnchorResult, CareerAnchor } from '../types/personality';
 import { careerAnchors } from '../data/personalityTypes';
@@ -29,13 +29,20 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({
     : `我的职业锚是「${result.type.name}」！来测测你的职业锚是什么？`;
   const shareUrl = window.location.href;
 
-  const handleShare = (platform: string) => {
-    const urls = {
-      twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`,
-      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
-      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`,
-    };
-    window.open(urls[platform as keyof typeof urls], '_blank', 'width=600,height=400');
+  const nativeShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: '职业锚测评',
+          text: shareText,
+          url: shareUrl,
+        });
+      } catch {
+        // User cancelled
+      }
+    } else {
+      copyToClipboard();
+    }
   };
 
   const copyToClipboard = async () => {
@@ -45,6 +52,24 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({
     } catch (err) {
       console.error('Failed to copy:', err);
     }
+  };
+
+  const shareToWechat = () => {
+    alert('请长按保存分享图，发送给微信好友或分享到朋友圈');
+  };
+
+  const shareToQQ = () => {
+    const url = `https://connect.qq.com/widget/shareqq/index.html?title=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+    window.open(url, '_blank', 'width=600,height=500');
+  };
+
+  const shareToQZone = () => {
+    const url = `https://connect.qq.com/widget/shareqq/index.html?title=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}&otype=share`;
+    window.open(url, '_blank', 'width=600,height=500');
+  };
+
+  const shareToXiaohongshu = () => {
+    alert('请保存分享图，打开小红书 APP 发布笔记');
   };
 
   const generateShareImage = useCallback(async () => {
@@ -206,7 +231,7 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({
           <button
             onClick={generateShareImage}
             disabled={generating}
-            className="flex items-center justify-center space-x-2 px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-300 disabled:opacity-50"
+            className="flex items-center justify-center space-x-2 px-8 py-4 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg disabled:opacity-50"
           >
             <Download className="w-5 h-5" />
             <span>{generating ? '生成中...' : '保存分享图'}</span>
@@ -227,36 +252,52 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({
             <h4 className="text-lg font-bold text-gray-800 mb-4 text-center">
               分享你的职业锚
             </h4>
-            <div className="flex flex-wrap gap-4 justify-center">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <button
-                onClick={() => handleShare('twitter')}
-                className="flex items-center space-x-2 px-6 py-3 bg-blue-400 text-white rounded-xl hover:bg-blue-500 transition-colors"
+                onClick={shareToWechat}
+                className="flex items-center justify-center space-x-2 px-4 py-3 bg-[#07C160] text-white rounded-xl hover:bg-[#06a050] transition-colors font-medium"
               >
-                <Twitter className="w-5 h-5" />
-                <span>Twitter</span>
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098 10.16 10.16 0 0 0 2.837.403c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 5.853-1.838-.576-3.583-4.196-6.348-8.596-6.348zM5.785 5.991c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178A1.17 1.17 0 0 1 4.623 7.17c0-.651.52-1.18 1.162-1.18zm5.813 0c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178 1.17 1.17 0 0 1-1.162-1.178c0-.651.52-1.18 1.162-1.18zm5.34 2.867c-1.797-.052-3.746.512-5.28 1.786-1.72 1.428-2.687 3.72-1.78 6.22.942 2.453 3.666 4.229 6.884 4.229.826 0 1.622-.12 2.361-.336a.722.722 0 0 1 .598.082l1.584.926a.272.272 0 0 0 .14.047c.134 0 .24-.111.24-.247 0-.06-.023-.12-.038-.177l-.327-1.233a.49.49 0 0 1 .177-.554C23.016 18.115 24 16.405 24 14.479c0-3.197-3.098-5.621-7.062-5.621zm-2.36 2.63c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.97-.982zm4.72 0c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.969-.982z"/></svg>
+                <span>微信好友</span>
               </button>
 
               <button
-                onClick={() => handleShare('facebook')}
-                className="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+                onClick={shareToWechat}
+                className="flex items-center justify-center space-x-2 px-4 py-3 bg-[#07C160] text-white rounded-xl hover:bg-[#06a050] transition-colors font-medium"
               >
-                <Facebook className="w-5 h-5" />
-                <span>Facebook</span>
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098 10.16 10.16 0 0 0 2.837.403c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 5.853-1.838-.576-3.583-4.196-6.348-8.596-6.348zM5.785 5.991c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178A1.17 1.17 0 0 1 4.623 7.17c0-.651.52-1.18 1.162-1.18zm5.813 0c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178 1.17 1.17 0 0 1-1.162-1.178c0-.651.52-1.18 1.162-1.18z"/></svg>
+                <span>朋友圈</span>
               </button>
 
               <button
-                onClick={() => handleShare('linkedin')}
-                className="flex items-center space-x-2 px-6 py-3 bg-blue-800 text-white rounded-xl hover:bg-blue-900 transition-colors"
+                onClick={shareToQQ}
+                className="flex items-center justify-center space-x-2 px-4 py-3 bg-[#12B7F5] text-white rounded-xl hover:bg-[#0e9ad1] transition-colors font-medium"
               >
-                <Linkedin className="w-5 h-5" />
-                <span>LinkedIn</span>
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm3.5 14.5h-7c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5h7c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5zm0-4h-7c-.83 0-1.5-.67-1.5-1.5S7.67 9.5 8.5 9.5h7c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5z"/></svg>
+                <span>QQ好友</span>
+              </button>
+
+              <button
+                onClick={shareToQZone}
+                className="flex items-center justify-center space-x-2 px-4 py-3 bg-[#FFC300] text-gray-900 rounded-xl hover:bg-[#e6b000] transition-colors font-medium"
+              >
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                <span>QQ空间</span>
+              </button>
+
+              <button
+                onClick={shareToXiaohongshu}
+                className="flex items-center justify-center space-x-2 px-4 py-3 bg-[#FF2442] text-white rounded-xl hover:bg-[#e01f3a] transition-colors font-medium"
+              >
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.5 14h-9a.5.5 0 0 1-.5-.5v-7a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-.5.5z"/></svg>
+                <span>小红书</span>
               </button>
 
               <button
                 onClick={copyToClipboard}
-                className="flex items-center space-x-2 px-6 py-3 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-colors"
+                className="flex items-center justify-center space-x-2 px-4 py-3 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-colors font-medium"
               >
-                <Share2 className="w-5 h-5" />
+                <Link2 className="w-5 h-5" />
                 <span>复制链接</span>
               </button>
             </div>
