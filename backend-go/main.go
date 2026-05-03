@@ -58,6 +58,11 @@ func startVersionPoller() {
 }
 
 func pollFrontendVersion() {
+	// Reload targetVersion from VERSION file in case it changed since startup
+	if data, err := os.ReadFile("../VERSION"); err == nil {
+		targetVersion = strings.TrimSpace(string(data))
+	}
+
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Get(frontendVersionURL)
 	if err != nil {
