@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>问卷 QA 自动测试</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
+      min-height: 100vh;
+      padding: 24px;
+      color: #1e293b;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 28px;
+      color: #1e40af;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      color: #64748b;
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      border: 1px solid #e2e8f0;
+    }
+    .card h2 {
+      font-size: 16px;
+      color: #1e40af;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .form-row {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .form-group {
+      flex: 1;
+      min-width: 200px;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: #475569;
+      margin-bottom: 4px;
+    }
+    input, select {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 14px;
+      background: #fff;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: #1e40af;
+      box-shadow: 0 0 0 3px rgba(30,64,175,0.1);
+    }
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+    }
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .btn-primary {
+      background: #1e40af;
+      color: #fff;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: #1e3a8a;
+    }
+    .btn-danger {
+      background: #dc2626;
+      color: #fff;
+    }
+    .btn-danger:hover:not(:disabled) {
+      background: #b91c1c;
+    }
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #cbd5e1;
+    }
+    .btn-secondary:hover:not(:disabled) {
+      background: #e2e8f0;
+    }
+    .progress-area {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+    .progress-bar {
+      flex: 1;
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #1e40af;
+      border-radius: 4px;
+      transition: width 0.3s;
+      width: 0%;
+    }
+    .stats {
+      display: flex;
+      gap: 24px;
+      font-size: 14px;
+      color: #475569;
+    }
+    .stats span { font-weight: 600; }
+    .stats .ok { color: #16a34a; }
+    .stats .err { color: #dc2626; }
+    .log {
+      max-height: 320px;
+      overflow-y: auto;
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 12px;
+      font-family: 'SF Mono', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .log-entry {
+      padding: 4px 0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .log-entry:last-child { border-bottom: none; }
+    .log-time { color: #94a3b8; }
+    .log-ok { color: #16a34a; }
+    .log-err { color: #dc2626; }
+    .verify-result {
+      margin-top: 12px;
+      padding: 12px;
+      background: #f0f9ff;
+      border-radius: 8px;
+      border: 1px solid #bae6fd;
+      font-size: 14px;
+    }
+    .verify-result.error {
+      background: #fef2f2;
+      border-color: #fecaca;
+    }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>问卷 QA 自动测试</h1>
+    <p class="subtitle">模拟真实用户完成问卷并提交到后端，验证完整数据管道</p>
+
+    <div class="card">
+      <h2>配置</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label>后端 API 地址</label>
+          <input type="text" id="apiBase" value="https://wide-radio-specs-namespace.trycloudflare.com">
+        </div>
+        <div class="form-group">
+          <label>测试数量</label>
+          <input type="number" id="count" value="100" min="1" max="1000">
+        </div>
+        <div class="form-group">
+          <label>间隔 (ms)</label>
+          <input type="number" id="delay" value="200" min="0" max="5000">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>答案策略</label>
+          <select id="strategy">
+            <option value="random">完全随机</option>
+            <option value="tf">偏向 TF (技术)</option>
+            <option value="gm">偏向 GM (管理)</option>
+            <option value="au">偏向 AU (自主)</option>
+            <option value="se">偏向 SE (稳定)</option>
+            <option value="ec">偏向 EC (创业)</option>
+            <option value="sv">偏向 SV (服务)</option>
+            <option value="ch">偏向 CH (挑战)</option>
+            <option value="ls">偏向 LS (生活)</option>
+            <option value="uniform">均匀分布</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>姓名前缀 (可选)</label>
+          <input type="text" id="namePrefix" placeholder="留空则随机中文名">
+        </div>
+        <div class="form-group">
+          <label>来源标记</label>
+          <input type="text" id="sourceTag" value="QA-Bot">
+        </div>
+      </div>
+      <div class="btn-group">
+        <button id="startBtn" class="btn-primary">开始测试</button>
+        <button id="stopBtn" class="btn-danger" disabled>停止</button>
+        <button id="clearBtn" class="btn-secondary">清空日志</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>进度</h2>
+      <div class="progress-area">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="stats">
+          <div><span id="current">0</span> / <span id="total">100</span></div>
+          <div class="ok">成功: <span id="success">0</span></div>
+          <div class="err">失败: <span id="fail">0</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>日志</h2>
+      <div class="log" id="log"></div>
+    </div>
+
+    <div class="card">
+      <h2>后端验证</h2>
+      <div class="btn-group">
+        <button id="verifyBtn" class="btn-secondary">查询后端统计数据</button>
+        <button id="verifyAdminBtn" class="btn-secondary">拉取提交列表 (Admin)</button>
+      </div>
+      <div id="verifyResult" class="verify-result hidden"></div>
+    </div>
+  </div>
+
+  <script>
+    // ===== 常量 =====
+    const LETTER_TO_ANCHOR = {
+      A: 'TF', B: 'GM', C: 'AU', D: 'SE',
+      E: 'EC', F: 'SV', G: 'CH', H: 'LS',
+    };
+    const ANCHOR_CODES = ['TF','GM','AU','SE','EC','SV','CH','LS'];
+    const LETTERS = ['A','B','C','D','E','F','G','H'];
+    const SURNAMES = '王李张刘陈杨黄赵吴周徐孙马朱胡郭林何高罗郑梁谢宋唐许韩冯邓曹彭曾肖田董袁潘于蒋蔡余杜叶程苏魏吕丁任沈姚卢姜崔钟谭陆汪范金石廖贾夏付方白邹孟熊秦邱江尹薛闫段雷侯龙史黎贺顾毛郝龚邵万钱严覃武戴莫孔向汤'.split('');
+    const NAME_CHARS = '伟芳娜敏静丽强磊军洋勇艳杰娟涛明超秀兰霞平刚桂英华建文辉玉梅鑫颖斌婷雪秀婷秀英华敏静丽强磊军军洋勇艳杰杰娟涛涛明明超秀兰霞霞平平刚刚桂桂英英华华建建文文辉辉玉玉梅梅鑫鑫颖颖斌斌婷婷雪雪'.split('');
+
+    // ===== DOM 引用 =====
+    const $ = id => document.getElementById(id);
+    const apiBaseInput = $('apiBase');
+    const countInput = $('count');
+    const delayInput = $('delay');
+    const strategyInput = $('strategy');
+    const namePrefixInput = $('namePrefix');
+    const sourceTagInput = $('sourceTag');
+    const startBtn = $('startBtn');
+    const stopBtn = $('stopBtn');
+    const clearBtn = $('clearBtn');
+    const verifyBtn = $('verifyBtn');
+    const verifyAdminBtn = $('verifyAdminBtn');
+    const progressFill = $('progressFill');
+    const currentEl = $('current');
+    const totalEl = $('total');
+    const successEl = $('success');
+    const failEl = $('fail');
+    const logEl = $('log');
+    const verifyResult = $('verifyResult');
+
+    // ===== 状态 =====
+    let running = false;
+    let stopped = false;
+    let current = 0;
+    let success = 0;
+    let fail = 0;
+    let total = 100;
+
+    // ===== 工具函数 =====
+    function now() {
+      return new Date().toLocaleTimeString('zh-CN', { hour12: false });
+    }
+
+    function log(msg, type = 'info') {
+      const div = document.createElement('div');
+      div.className = 'log-entry';
+      const colorClass = type === 'ok' ? 'log-ok' : type === 'err' ? 'log-err' : '';
+      div.innerHTML = `<span class="log-time">[${now()}]</span> <span class="${colorClass}">${msg}</span>`;
+      logEl.appendChild(div);
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function updateProgress() {
+      currentEl.textContent = current;
+      totalEl.textContent = total;
+      successEl.textContent = success;
+      failEl.textContent = fail;
+      const pct = total > 0 ? (current / total) * 100 : 0;
+      progressFill.style.width = pct + '%';
+    }
+
+    function randInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function pick(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function generateName() {
+      const prefix = namePrefixInput.value.trim();
+      if (prefix) return prefix + randInt(1, 999);
+      const surname = pick(SURNAMES);
+      const len = Math.random() > 0.3 ? 2 : 1;
+      let name = surname;
+      for (let i = 0; i < len; i++) {
+        name += pick(NAME_CHARS);
+      }
+      return name;
+    }
+
+    function generatePhone() {
+      const prefixes = ['13','14','15','16','17','18','19'];
+      const prefix = pick(prefixes) + randInt(0, 9);
+      let suffix = '';
+      for (let i = 0; i < 8; i++) suffix += randInt(0, 9);
+      return prefix + suffix;
+    }
+
+    function generateAnswers(strategy) {
+      const answers = [];
+      const biasMap = { tf:'A', gm:'B', au:'C', se:'D', ec:'E', sv:'F', ch:'G', ls:'H' };
+      const biasedLetter = biasMap[strategy];
+
+      if (strategy === 'uniform') {
+        // 尽量让每种锚点数量接近，人为构造均匀分布
+        const pool = [];
+        for (let i = 0; i < 10; i++) {
+          pool.push(LETTERS[i % 8]);
+        }
+        // 打乱
+        for (let i = pool.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [pool[i], pool[j]] = [pool[j], pool[i]];
+        }
+        return pool;
+      }
+
+      for (let i = 0; i < 10; i++) {
+        if (biasedLetter && Math.random() < 0.7) {
+          answers.push(biasedLetter);
+        } else {
+          answers.push(pick(LETTERS));
+        }
+      }
+      return answers;
+    }
+
+    function calculateResult(answers) {
+      const counts = {};
+      for (const code of ANCHOR_CODES) counts[code] = 0;
+      for (const a of answers) {
+        const anchor = LETTER_TO_ANCHOR[a];
+        if (anchor) counts[anchor]++;
+      }
+      const maxCount = Math.max(...Object.values(counts));
+      const top = ANCHOR_CODES.filter(code => counts[code] === maxCount);
+      return {
+        primary: top.join('+'),
+        scores: counts,
+      };
+    }
+
+    function apiUrl(path) {
+      const base = apiBaseInput.value.trim().replace(/\/$/, '');
+      const apiBase = base.endsWith('/api') ? base : base + '/api';
+      return apiBase + path;
+    }
+
+    async function submitOne(index) {
+      const name = generateName();
+      const phone = generatePhone();
+      const answers = generateAnswers(strategyInput.value);
+      const result = calculateResult(answers);
+      const source = sourceTagInput.value.trim() || 'QA-Bot';
+
+      const payload = {
+        answers,
+        scores: result.scores,
+        result: result.primary,
+        source,
+        user_id: '',
+        name,
+        phone,
+      };
+
+      try {
+        const res = await fetch(apiUrl('/submit'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const err = await res.text();
+          throw new Error(`HTTP ${res.status}: ${err}`);
+        }
+        const data = await res.json();
+        return { ok: true, id: data.id, name, phone, result: result.primary };
+      } catch (e) {
+        return { ok: false, error: e.message, name, phone };
+      }
+    }
+
+    async function sleep(ms) {
+      return new Promise(r => setTimeout(r, ms));
+    }
+
+    async function runTest() {
+      running = true;
+      stopped = false;
+      current = 0;
+      success = 0;
+      fail = 0;
+      total = parseInt(countInput.value) || 100;
+      const delay = parseInt(delayInput.value) || 0;
+
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
+      log(`开始测试: ${total} 条, 策略=${strategyInput.value}, 间隔=${delay}ms`);
+
+      for (let i = 1; i <= total; i++) {
+        if (stopped) {
+          log('用户停止', 'err');
+          break;
+        }
+        const r = await submitOne(i);
+        current++;
+        if (r.ok) {
+          success++;
+          log(`#${i} OK | ${r.name} ${r.phone} | ${r.result} | id=${r.id?.slice(0,8)}...`, 'ok');
+        } else {
+          fail++;
+          log(`#${i} FAIL | ${r.name} ${r.phone} | ${r.error}`, 'err');
+        }
+        updateProgress();
+        if (delay > 0 && i < total) await sleep(delay);
+      }
+
+      running = false;
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+      log(`测试结束: 成功 ${success} / 失败 ${fail} / 总计 ${current}`);
+    }
+
+    // ===== 事件绑定 =====
+    startBtn.addEventListener('click', () => {
+      if (running) return;
+      runTest();
+    });
+
+    stopBtn.addEventListener('click', () => {
+      stopped = true;
+      stopBtn.disabled = true;
+    });
+
+    clearBtn.addEventListener('click', () => {
+      logEl.innerHTML = '';
+    });
+
+    verifyBtn.addEventListener('click', async () => {
+      verifyResult.classList.remove('hidden', 'error');
+      verifyResult.textContent = '查询中...';
+      try {
+        const res = await fetch(apiUrl('/stats'));
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const lines = [
+          `总提交数: ${data.total}`,
+          '按结果分布:',
+          ...data.byResult.map(r => `  ${r.result}: ${r.count} 条`),
+        ];
+        verifyResult.innerHTML = lines.join('<br>');
+      } catch (e) {
+        verifyResult.classList.add('error');
+        verifyResult.textContent = '查询失败: ' + e.message;
+      }
+    });
+
+    verifyAdminBtn.addEventListener('click', async () => {
+      verifyResult.classList.remove('hidden', 'error');
+      verifyResult.textContent = '查询中...';
+      try {
+        const res = await fetch(apiUrl('/submissions'), {
+          headers: { 'X-Admin-Token': 'aass1122' },
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const lines = [
+          `返回记录数: ${data.count}`,
+          '最近 5 条:',
+          ...data.submissions.slice(0, 5).map(s =>
+            `  ${s.name || '(空)'} | ${s.phone || '(空)'} | ${s.result} | src=${s.source || '(空)'} | ${new Date(s.created_at).toLocaleString('zh-CN')}`
+          ),
+        ];
+        verifyResult.innerHTML = lines.join('<br>');
+      } catch (e) {
+        verifyResult.classList.add('error');
+        verifyResult.textContent = '查询失败: ' + e.message;
+      }
+    });
+
+    log('QA 测试模块已就绪。配置参数后点击"开始测试"。');
+  </script>
+</body>
+</html>
