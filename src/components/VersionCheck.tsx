@@ -32,6 +32,14 @@ export function VersionCheck() {
   }, []);
 
   useEffect(() => {
+    // Clear stale refresh flag when user switches back to tab
+    // (not an actual reload triggered by our refresh button)
+    const entries = performance.getEntriesByType('navigation');
+    const isReload = entries.length > 0 && (entries[0] as PerformanceNavigationTiming).type === 'reload';
+    if (!isReload) {
+      sessionStorage.removeItem(REFRESHED_KEY);
+    }
+
     doCheck();
     const timer = setInterval(doCheck, VERSION_CHECK_INTERVAL);
     return () => clearInterval(timer);

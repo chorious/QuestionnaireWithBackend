@@ -98,14 +98,14 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({
         {/* Image Preview Modal */}
         {previewUrl && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-            <div className="bg-white rounded-card p-6 max-w-sm w-full shadow-2xl">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-gray-800">分享图预览</h3>
+            <div className="bg-white rounded-card p-5 sm:p-6 w-[85vw] max-w-[300px] sm:max-w-[320px] shadow-2xl">
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
+                <h3 className="text-base sm:text-lg font-bold text-gray-800">分享图预览</h3>
                 <button onClick={() => setPreviewUrl(null)} className="text-gray-400 hover:text-gray-600">
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <img src={previewUrl} alt="分享图" className="w-full rounded-card mb-4 border border-gray-100" />
+              <img src={previewUrl} alt="分享图" className="w-full rounded-card mb-3 sm:mb-4 border border-gray-100 max-h-[50vh] object-contain" />
               <div className="flex gap-3">
                 <button
                   onClick={downloadImage}
