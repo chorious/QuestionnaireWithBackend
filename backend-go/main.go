@@ -91,7 +91,7 @@ func initDB() {
 }
 
 func handleVersion(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"version": "1.0.0"})
+	c.JSON(http.StatusOK, gin.H{"version": "0.0.7"})
 }
 
 func handleSubmit(c *gin.Context) {

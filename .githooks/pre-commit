@@ -1,0 +1,33 @@
+#!/bin/sh
+# Auto-bump version on commit
+
+VERSION_FILE="src/config/version.ts"
+BACKEND_FILE="backend-go/main.go"
+
+# Read current version from frontend file
+CURRENT=$(awk -F"'" '/APP_VERSION/ {print $2}' "$VERSION_FILE")
+
+if [ -z "$CURRENT" ]; then
+    echo "pre-commit: could not read version from $VERSION_FILE, skipping bump"
+    exit 0
+fi
+
+# Split into parts
+MAJOR=$(echo "$CURRENT" | cut -d. -f1)
+MINOR=$(echo "$CURRENT" | cut -d. -f2)
+PATCH=$(echo "$CURRENT" | cut -d. -f3)
+
+# Bump patch
+PATCH=$((PATCH + 1))
+NEW="$MAJOR.$MINOR.$PATCH"
+
+# Update frontend file (in-place without backup)
+sed -i.bak "s/APP_VERSION = '[^']*'/APP_VERSION = '$NEW'/" "$VERSION_FILE" && rm -f "$VERSION_FILE.bak"
+
+# Update backend file
+sed -i.bak 's/"version": "[^"]*"/"version": "'"$NEW"'"/' "$BACKEND_FILE" && rm -f "$BACKEND_FILE.bak"
+
+git add "$VERSION_FILE" "$BACKEND_FILE"
+
+echo "pre-commit: bumped version $CURRENT -> $NEW"
+exit 0
