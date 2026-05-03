@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { Share2, RefreshCw, Twitter, Facebook, Linkedin } from 'lucide-react';
+import React, { useState, useRef, useCallback } from 'react';
+import { Share2, RefreshCw, Twitter, Facebook, Linkedin, Download } from 'lucide-react';
+import { toPng } from 'html-to-image';
 import { CareerAnchorResult, CareerAnchor } from '../types/personality';
 import { careerAnchors } from '../data/personalityTypes';
 
@@ -19,6 +20,8 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({
   submitStatus = 'idle',
 }) => {
   const [showSharing, setShowSharing] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const shareCardRef = useRef<HTMLDivElement>(null);
 
   const isDual = result.secondaryType !== null;
   const shareText = isDual
@@ -44,15 +47,40 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({
     }
   };
 
+  const generateShareImage = useCallback(async () => {
+    if (!shareCardRef.current) return;
+    setGenerating(true);
+    try {
+      const dataUrl = await toPng(shareCardRef.current, {
+        quality: 0.95,
+        pixelRatio: 2,
+      });
+      const link = document.createElement('a');
+      link.download = `职业锚测评_${nickname}_${result.type.name}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error('生成分享图失败:', err);
+      alert('生成图片失败，请重试');
+    } finally {
+      setGenerating(false);
+    }
+  }, [nickname, result.type.name]);
+
   const maxScore = Math.max(...ANCHOR_ORDER.map((c) => result.scores[c] ?? 0));
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="max-w-4xl w-full">
+        {/* Hidden Share Card for screenshot */}
+        <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
+          <ShareCard ref={shareCardRef} result={result} nickname={nickname} maxScore={maxScore} />
+        </div>
+
         {/* Result Header */}
         <div className="text-center mb-8 animate-fade-in">
           <h2 className="text-3xl font-bold text-gray-800 mb-2">
-            恭喜，{nickname}！🎉
+            恭喜，{nickname}！
           </h2>
           <p className="text-gray-600">你的职业锚已揭晓</p>
           {submitStatus === 'submitting' && (
@@ -176,6 +204,15 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({
           </button>
 
           <button
+            onClick={generateShareImage}
+            disabled={generating}
+            className="flex items-center justify-center space-x-2 px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-300 disabled:opacity-50"
+          >
+            <Download className="w-5 h-5" />
+            <span>{generating ? '生成中...' : '保存分享图'}</span>
+          </button>
+
+          <button
             onClick={onRestart}
             className="flex items-center justify-center space-x-2 px-8 py-4 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all duration-300"
           >
@@ -229,6 +266,97 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({
     </div>
   );
 };
+
+// Hidden card used for html-to-image capture
+const ShareCard = React.forwardRef<HTMLDivElement, {
+  result: CareerAnchorResult;
+  nickname: string;
+  maxScore: number;
+}>(({ result, nickname, maxScore }, ref) => {
+  const isDual = result.secondaryType !== null;
+
+  return (
+    <div
+      ref={ref}
+      style={{
+        width: '375px',
+        background: '#fff',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        color: '#1e293b',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Header */}
+      <div style={{ background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)', padding: '28px 24px', textAlign: 'center' }}>
+        <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.8)', letterSpacing: '2px', marginBottom: '4px' }}>CAREER ANCHOR</div>
+        <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#fff' }}>职业锚测评</div>
+      </div>
+
+      {/* User & Result */}
+      <div style={{ padding: '28px 24px', textAlign: 'center' }}>
+        <div style={{ fontSize: '14px', color: '#64748b', marginBottom: '8px' }}>
+          {nickname} 的测评结果
+        </div>
+        <div style={{ fontSize: '56px', marginBottom: '8px' }}>{result.type.emoji}</div>
+        <div style={{ fontSize: '28px', fontWeight: 'bold', color: result.type.color, marginBottom: '4px' }}>
+          {result.type.name}
+        </div>
+        <div style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '12px' }}>
+          {result.type.englishName}
+        </div>
+        {isDual && result.secondaryType && (
+          <div style={{ fontSize: '14px', color: '#64748b', marginBottom: '12px' }}>
+            双锚型：{result.type.name} + {result.secondaryType.name}
+          </div>
+        )}
+        <div style={{ fontSize: '14px', color: '#475569', lineHeight: '1.6', textAlign: 'left', background: '#f8fafc', borderRadius: '12px', padding: '16px' }}>
+          {result.type.description}
+        </div>
+      </div>
+
+      {/* Score Distribution */}
+      <div style={{ padding: '0 24px 24px' }}>
+        <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#1e293b', marginBottom: '16px' }}>8 种职业锚得分</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {ANCHOR_ORDER.map((code) => {
+            const anchor = careerAnchors.find((a) => a.code === code)!;
+            const score = result.scores[code] ?? 0;
+            const pct = maxScore > 0 ? (score / maxScore) * 100 : 0;
+            const isTop = score === maxScore && maxScore > 0;
+            return (
+              <div key={code} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '16px', width: '20px', textAlign: 'center' }}>{anchor.emoji}</span>
+                <span style={{ fontSize: '12px', fontWeight: 'bold', width: '28px', color: anchor.color }}>{code}</span>
+                <div style={{ flex: 1, background: '#e2e8f0', borderRadius: '4px', height: '8px', overflow: 'hidden' }}>
+                  <div style={{ width: `${Math.max(pct, 5)}%`, height: '100%', background: anchor.color, borderRadius: '4px' }} />
+                </div>
+                <span style={{ fontSize: '12px', fontWeight: 'bold', width: '16px', textAlign: 'right', color: isTop ? anchor.color : '#64748b' }}>{score}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Careers */}
+      <div style={{ padding: '0 24px 24px' }}>
+        <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#1e293b', marginBottom: '12px' }}>适合的职业方向</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+          {result.type.careers.slice(0, 6).map((career, i) => (
+            <span key={i} style={{ fontSize: '12px', padding: '6px 12px', background: '#f1f5f9', color: '#475569', borderRadius: '20px', border: '1px solid #e2e8f0' }}>
+              {career}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div style={{ background: '#f8fafc', padding: '20px 24px', textAlign: 'center', borderTop: '1px solid #e2e8f0' }}>
+        <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '4px' }}>扫码测测你的职业锚</div>
+        <div style={{ fontSize: '12px', color: '#94a3b8' }}>{window.location.origin}</div>
+      </div>
+    </div>
+  );
+});
 
 function AnchorBadge({ anchor }: { anchor: CareerAnchor }) {
   return (

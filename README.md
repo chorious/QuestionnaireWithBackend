@@ -18,6 +18,7 @@ Based on Edgar Schein's Career Anchor theory: 8 core drives that shape career ch
 - **Version Check**: Frontend polls backend version every 30s; prompts refresh on mismatch
 - **Duplicate Protection**: Prevents double-submit on the final question
 - **Required Contact Info**: Name (Chinese, ≤10 chars) and phone (digits, ≤16) required before starting
+- **Share Image Generation**: One-click save result card as PNG (375×auto, retina 2×) via `html-to-image`
 
 ---
 
@@ -117,12 +118,14 @@ Response:
 
 The version follows semantic-like numbering (`major.minor.patch`). The frontend polls this every 30s and prompts the user to refresh when the backend version differs from the frontend's `APP_VERSION`.
 
-**Auto-bump:** A `pre-commit` hook in `.githooks/pre-commit` automatically increments the patch version on every commit. It updates both `src/config/version.ts` and `backend-go/main.go`, then stages the changes.
+**Auto-bump:** A `pre-commit` hook in `.githooks/pre-commit` automatically increments the patch version on every commit. It updates the `VERSION` file and `src/config/version.ts`, then stages them.
 
 Enable it once:
 ```bash
 git config core.hooksPath .githooks
 ```
+
+The backend reads `../VERSION` at runtime, so **no recompilation is needed after push**.
 
 ### POST /api/submit
 
@@ -270,7 +273,7 @@ QuestionnaireWithBackend/
 - [x] Cache invalidation for static hosting deploys
 - [x] Admin data dashboard (basic via `public/qa.html`)
 - [x] QA auto-test bot for load testing
-- [ ] Add result share image generation (Canvas / html2canvas)
+- [x] Result share image generation (PNG card via `html-to-image`)
 - [ ] Deploy backend to cloud server or VPS (currently local + tunnel)
 - [ ] Multi-language support
 
