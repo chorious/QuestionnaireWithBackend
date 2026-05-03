@@ -26,7 +26,7 @@ Based on Edgar Schein's Career Anchor theory: 8 core drives that shape career ch
 | Layer | Technology |
 |---|---|
 | Frontend | React 18 + TypeScript + Tailwind CSS + Vite |
-| Backend | Go 1.25 + Gin |
+| Backend | Go 1.24+ + Gin |
 | Database | SQLite (modernc.org/sqlite, pure Go, no CGO) |
 
 ### Environment Variables
@@ -35,6 +35,19 @@ Based on Edgar Schein's Career Anchor theory: 8 core drives that shape career ch
 |---|---|---|
 | `PORT` | No | Server port (default: 3000) |
 | `ADMIN_TOKEN` | No | Protects `/submissions`, `/export`, `/stats`. If unset, these endpoints return 401. |
+
+---
+
+## Deployment Architecture
+
+Production deployment uses this setup:
+
+- **Frontend**: GitHub Pages (static hosting)
+- **Backend**: Local Windows machine running Go + SQLite
+- **Tunnel**: Cloudflare Tunnel exposes local backend to the internet with a temporary URL
+- **API Base**: Hardcoded in `src/api/client.ts` to the current tunnel URL
+
+> Note: Cloudflare quick tunnels generate a new URL on each restart. Update `src/api/client.ts` and redeploy if the tunnel URL changes.
 
 ---
 
@@ -99,7 +112,16 @@ go build -o questionnaire-backend
 
 Response:
 ```json
-{"version": "1.0.0"}
+{"version": "0.0.5"}
+```
+
+The version follows semantic-like numbering (`major.minor.patch`). The frontend polls this every 30s and prompts the user to refresh when the backend version differs from the frontend's `APP_VERSION`.
+
+**Auto-bump:** A `pre-commit` hook in `.githooks/pre-commit` automatically increments the patch version on every commit. It updates both `src/config/version.ts` and `backend-go/main.go`, then stages the changes.
+
+Enable it once:
+```bash
+git config core.hooksPath .githooks
 ```
 
 ### POST /api/submit
@@ -110,7 +132,7 @@ Request body:
   "answers": ["A", "B", "C", "D", "E", "F", "G", "H", "A", "B"],
   "scores": {"TF": 2, "GM": 2, "AU": 1, "SE": 1, "EC": 1, "SV": 1, "CH": 1, "LS": 1},
   "result": "TF+GM",
-  "source": "",
+  "source": "Android",
   "user_id": "550e8400-e29b-41d4-a716-446655440000",
   "name": "张三",
   "phone": "13800138000"
@@ -120,6 +142,7 @@ Request body:
 - `user_id` is optional. If provided, it is stored as-is. If omitted, the server generates one.
 - The frontend persists `user_id` in localStorage so the same user always submits the same ID.
 - `name` and `phone` are collected on the welcome screen. Name must be Chinese characters (≤10). Phone must be digits (≤16).
+- `source` is auto-populated by the frontend based on `navigator.userAgent` platform detection (`Android`, `iOS`, `Windows`, `macOS`, `Linux`, or `Web`).
 
 Response:
 ```json
@@ -182,6 +205,18 @@ Response:
 
 ---
 
+## QA Auto-Testing
+
+Open `public/qa.html` directly in a browser (or visit `https://your-github-pages-url/QuestionnaireWithBackend/qa.html` after deploy). This standalone module simulates real users completing the questionnaire:
+
+- Configure API base URL, submission count, delay, answer strategy
+- **Strategies**: random, biased toward one of 8 anchors (70% weight), or uniform distribution
+- Auto-generates Chinese names and valid phone numbers
+- Real-time progress bar and log
+- Backend verification buttons query `/api/stats` and `/api/submissions` (requires `X-Admin-Token`)
+
+---
+
 ## Project Structure
 
 ```
@@ -216,6 +251,9 @@ QuestionnaireWithBackend/
 |   |-- go.sum
 |   |-- data.db                    # SQLite database (gitignored)
 |
+|-- public/
+|   |-- qa.html                    # Standalone QA auto-test module
+|
 |-- package.json
 |-- vite.config.ts
 |-- tailwind.config.js
@@ -227,10 +265,13 @@ QuestionnaireWithBackend/
 ## Roadmap / TODO
 
 - [x] Replace MBTI 32-question model with Career Anchor 10-question A-H scoring
+- [x] Add nickname and required contact fields (name + phone) to submission
+- [x] Platform detection (Android/iOS/Windows/macOS/Linux)
+- [x] Cache invalidation for static hosting deploys
+- [x] Admin data dashboard (basic via `public/qa.html`)
+- [x] QA auto-test bot for load testing
 - [ ] Add result share image generation (Canvas / html2canvas)
-- [ ] Add nickname and optional fields to submission
-- [ ] Deploy to production (cloud server or VPS)
-- [ ] Admin data dashboard (simple HTML page)
+- [ ] Deploy backend to cloud server or VPS (currently local + tunnel)
 - [ ] Multi-language support
 
 ---
