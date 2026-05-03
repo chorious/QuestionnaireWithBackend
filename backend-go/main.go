@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -91,7 +92,13 @@ func initDB() {
 }
 
 func handleVersion(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"version": "0.0.8"})
+	data, err := os.ReadFile("../VERSION")
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{"version": "unknown"})
+		return
+	}
+	version := strings.TrimSpace(string(data))
+	c.JSON(http.StatusOK, gin.H{"version": version})
 }
 
 func handleSubmit(c *gin.Context) {
