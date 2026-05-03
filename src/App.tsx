@@ -30,6 +30,16 @@ function App() {
     setAppState('results');
     setSubmitStatus('submitting');
 
+    const getPlatform = (): string => {
+      const ua = navigator.userAgent;
+      if (/android/i.test(ua)) return 'Android';
+      if (/iphone|ipad|ipod/i.test(ua)) return 'iOS';
+      if (/windows/i.test(ua)) return 'Windows';
+      if (/macintosh/i.test(ua)) return 'macOS';
+      if (/linux/i.test(ua)) return 'Linux';
+      return 'Web';
+    };
+
     try {
       await submitSubmission({
         answers: responses.map(r => r.value),
@@ -37,6 +47,7 @@ function App() {
         result: anchorResult.primary,
         name,
         phone,
+        source: getPlatform(),
       });
       setSubmitStatus('success');
     } catch (err) {
