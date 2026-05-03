@@ -105,7 +105,7 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <img src={previewUrl} alt="分享图" className="w-full rounded-card mb-3 sm:mb-4 border border-gray-100 max-h-[50vh] object-contain" />
+              <img src={previewUrl} alt="分享图" className="w-full rounded-card mb-3 sm:mb-4 border border-gray-100 max-h-[60vh] object-contain" />
               <div className="flex gap-3">
                 <button
                   onClick={downloadImage}
