@@ -1,2 +1,2 @@
-export const APP_VERSION = '0.0.10';
+export const APP_VERSION = '0.0.11';
 export const VERSION_CHECK_INTERVAL = 30 * 1000; // 30 seconds

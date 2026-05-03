@@ -3,6 +3,7 @@
 
 VERSION_FILE="VERSION"
 FRONTEND_FILE="src/config/version.ts"
+PUBLIC_VERSION="public/version.json"
 
 # Read current version from VERSION file
 CURRENT=$(cat "$VERSION_FILE" | tr -d '[:space:]')
@@ -27,7 +28,10 @@ echo "$NEW" > "$VERSION_FILE"
 # Update frontend file
 sed -i.bak "s/APP_VERSION = '[^']*'/APP_VERSION = '$NEW'/" "$FRONTEND_FILE" && rm -f "$FRONTEND_FILE.bak"
 
-git add "$VERSION_FILE" "$FRONTEND_FILE"
+# Generate public/version.json for GitHub Pages deploy tracking
+echo "{\"version\": \"$NEW\"}" > "$PUBLIC_VERSION"
+
+git add "$VERSION_FILE" "$FRONTEND_FILE" "$PUBLIC_VERSION"
 
 echo "pre-commit: bumped version $CURRENT -> $NEW"
 exit 0

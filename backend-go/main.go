@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -18,12 +19,91 @@ import (
 
 var db *sql.DB
 var adminToken string
+var deployedVersion string
+var targetVersion string
+
+const frontendVersionURL = "https://chorious.github.io/QuestionnaireWithBackend/version.json"
 
 func init() {
 	adminToken = os.Getenv("ADMIN_TOKEN")
 	if adminToken == "" {
 		adminToken = "aass1122"
 	}
+	initVersion()
+}
+
+func initVersion() {
+	data, err := os.ReadFile("../VERSION")
+	if err != nil {
+		fmt.Println("read VERSION failed:", err)
+		deployedVersion = "unknown"
+		targetVersion = "unknown"
+		return
+	}
+	targetVersion = strings.TrimSpace(string(data))
+	deployedVersion = targetVersion
+	fmt.Println("target version:", targetVersion)
+	startVersionPoller()
+}
+
+func startVersionPoller() {
+	ticker := time.NewTicker(15 * time.Second)
+	go func() {
+		for range ticker.C {
+			pollFrontendVersion()
+		}
+	}()
+	// Poll immediately on startup
+	go pollFrontendVersion()
+}
+
+func pollFrontendVersion() {
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Get(frontendVersionURL)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return
+	}
+	var v struct {
+		Version string `json:"version"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&v); err != nil {
+		return
+	}
+	frontendVer := strings.TrimSpace(v.Version)
+	if frontendVer == "" {
+		return
+	}
+	// Only advance deployedVersion when frontend has caught up to target
+	if compareVersion(frontendVer, targetVersion) >= 0 {
+		if deployedVersion != targetVersion {
+			deployedVersion = targetVersion
+			fmt.Println("[version] frontend deployed", deployedVersion)
+		}
+	} else if compareVersion(frontendVer, deployedVersion) < 0 {
+		// Frontend rolled back or stale
+		deployedVersion = frontendVer
+		fmt.Println("[version] frontend lagging", deployedVersion)
+	}
+}
+
+func compareVersion(a, b string) int {
+	partsA := strings.Split(a, ".")
+	partsB := strings.Split(b, ".")
+	for i := 0; i < len(partsA) && i < len(partsB); i++ {
+		na, _ := strconv.Atoi(partsA[i])
+		nb, _ := strconv.Atoi(partsB[i])
+		if na > nb {
+			return 1
+		}
+		if na < nb {
+			return -1
+		}
+	}
+	return len(partsA) - len(partsB)
 }
 
 func main() {
@@ -92,13 +172,7 @@ func initDB() {
 }
 
 func handleVersion(c *gin.Context) {
-	data, err := os.ReadFile("../VERSION")
-	if err != nil {
-		c.JSON(http.StatusOK, gin.H{"version": "unknown"})
-		return
-	}
-	version := strings.TrimSpace(string(data))
-	c.JSON(http.StatusOK, gin.H{"version": version})
+	c.JSON(http.StatusOK, gin.H{"version": deployedVersion})
 }
 
 func handleSubmit(c *gin.Context) {
