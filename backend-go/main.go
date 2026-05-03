@@ -22,7 +22,7 @@ var adminToken string
 var deployedVersion string
 var targetVersion string
 
-const frontendVersionURL = "https://chorious.github.io/QuestionnaireWithBackend/version.json"
+var frontendVersionURL = "https://chorious.github.io/QuestionnaireWithBackend/version.json"
 
 func init() {
 	adminToken = os.Getenv("ADMIN_TOKEN")

@@ -65,7 +65,7 @@ export const QuestionnaireScreen: React.FC<QuestionnaireScreenProps> = ({
         {/* Header */}
         <div className="text-center mb-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-2">
-            Hey {nickname}! 👋
+            你好，{nickname}
           </h2>
           <p className="text-gray-600">
             第 {currentQuestion + 1} 题 / 共 {questions.length} 题
@@ -78,7 +78,7 @@ export const QuestionnaireScreen: React.FC<QuestionnaireScreenProps> = ({
         </div>
 
         {/* Question Card */}
-        <div className="bg-white rounded-xl p-8 shadow-lg border border-gray-100 mb-8 animate-slide-up">
+        <div className="bg-white rounded-card p-8 shadow-lg border border-gray-100 mb-8 animate-slide-up">
           <div className="text-center mb-8">
             <h3 className="text-2xl font-bold text-gray-800 mb-2 leading-tight">
               {currentQ.text}
@@ -95,7 +95,7 @@ export const QuestionnaireScreen: React.FC<QuestionnaireScreenProps> = ({
                 <button
                   key={option.letter}
                   onClick={() => handleAnswer(option.letter)}
-                  className={`w-full p-4 rounded-lg text-left font-medium transition-all duration-300 hover:shadow-sm ${
+                  className={`w-full p-4 rounded-control text-left font-medium transition-all duration-300 hover:shadow-sm ${
                     isSelected
                       ? 'bg-blue-800 text-white shadow-md'
                       : 'bg-gray-50 hover:bg-gray-100 text-gray-700'
@@ -103,7 +103,7 @@ export const QuestionnaireScreen: React.FC<QuestionnaireScreenProps> = ({
                 >
                   <div className="flex items-center space-x-3">
                     <span
-                      className={`inline-flex items-center justify-center w-8 h-8 rounded-lg font-bold text-sm ${
+                      className={`inline-flex items-center justify-center w-8 h-8 rounded-control font-bold text-sm ${
                         isSelected
                           ? 'bg-white/20 text-white'
                           : 'bg-blue-100 text-blue-700'
@@ -129,7 +129,7 @@ export const QuestionnaireScreen: React.FC<QuestionnaireScreenProps> = ({
           <button
             onClick={goToPrevious}
             disabled={currentQuestion === 0}
-            className={`flex items-center space-x-2 px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
+            className={`flex items-center space-x-2 px-6 py-3 rounded-control font-medium transition-all duration-300 ${
               currentQuestion === 0
                 ? 'text-gray-400 cursor-not-allowed'
                 : 'text-blue-700 hover:bg-blue-50'
