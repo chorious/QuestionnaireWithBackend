@@ -67,7 +67,7 @@ export function VersionCheck() {
           </p>
           <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-1000"
+              className="h-full bg-blue-800 rounded-full transition-all duration-1000"
               style={{ width: `${(countdown / 10) * 100}%` }}
             />
           </div>
@@ -87,7 +87,7 @@ export function VersionCheck() {
         </p>
         <button
           onClick={handleRefresh}
-          className="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-lg hover:shadow-lg transition-all duration-300 hover:scale-105"
+          className="w-full py-3 px-6 rounded-xl bg-blue-800 text-white font-bold text-lg hover:bg-blue-900 transition-all duration-300 shadow-md hover:shadow-lg"
         >
           立即刷新
         </button>
