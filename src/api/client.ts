@@ -1,21 +1,14 @@
-const STORAGE_KEY = 'questionnaire_api_base';
 const USER_ID_KEY = 'questionnaire_user_id';
 
-// Default: use Vite proxy in dev, empty in production
-const DEFAULT_BASE = import.meta.env.DEV ? '/api' : '';
+// Hardcoded tunnel URL for production; Vite proxy in dev
+const DEFAULT_BASE = import.meta.env.DEV ? '/api' : 'https://transactions-measures-congress-son.trycloudflare.com';
 
 export function getApiBase(): string {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored) return stored;
   return DEFAULT_BASE;
 }
 
-export function setApiBase(base: string): void {
-  localStorage.setItem(STORAGE_KEY, base);
-}
-
 export function hasApiBase(): boolean {
-  return !!getApiBase();
+  return true;
 }
 
 function generateUUID(): string {

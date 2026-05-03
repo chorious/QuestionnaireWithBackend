@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronRight, Sparkles, Brain, Heart, Settings } from 'lucide-react';
-import { getApiBase, setApiBase, hasApiBase } from '../api/client';
+import { ChevronRight, Sparkles, Brain, Heart } from 'lucide-react';
 
 interface WelcomeScreenProps {
   onStart: (name: string, phone: string) => void;
@@ -13,8 +12,6 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart }) => {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [errors, setErrors] = useState<{ name?: string; phone?: string }>({});
-  const [apiBase, setApiBaseInput] = useState(getApiBase());
-  const [showConfig, setShowConfig] = useState(!hasApiBase());
 
   const validate = (): boolean => {
     const next: { name?: string; phone?: string } = {};
@@ -38,14 +35,6 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart }) => {
     e.preventDefault();
     if (validate()) {
       onStart(name.trim(), phone.trim());
-    }
-  };
-
-  const handleSaveApiBase = () => {
-    const trimmed = apiBase.trim();
-    if (trimmed) {
-      setApiBase(trimmed);
-      setShowConfig(false);
     }
   };
 
@@ -81,40 +70,6 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart }) => {
               <span className="text-sm font-medium">8 种职业锚</span>
             </div>
           </div>
-
-          {showConfig && (
-            <div className="mb-6 p-4 bg-yellow-50 rounded-xl border border-yellow-200">
-              <label className="block text-sm font-medium text-yellow-800 mb-2">
-                后端 API 地址（ngrok / local）
-              </label>
-              <input
-                type="text"
-                value={apiBase}
-                onChange={(e) => setApiBaseInput(e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border-2 border-yellow-300 focus:border-yellow-500 focus:outline-none transition-colors text-center mb-2"
-                placeholder="https://abc123.ngrok.io"
-              />
-              <p className="text-xs text-yellow-600 mb-3">
-                输入后端地址。本地开发使用 /api。
-              </p>
-              <button
-                onClick={handleSaveApiBase}
-                className="w-full bg-yellow-500 text-white py-2 px-4 rounded-lg font-medium hover:bg-yellow-600 transition-colors"
-              >
-                保存
-              </button>
-            </div>
-          )}
-
-          {!showConfig && (
-            <button
-              onClick={() => setShowConfig(true)}
-              className="mb-4 flex items-center justify-center space-x-1 text-sm text-gray-400 hover:text-gray-600 transition-colors mx-auto"
-            >
-              <Settings className="w-4 h-4" />
-              <span>API: {getApiBase() || 'not set'}</span>
-            </button>
-          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -155,8 +110,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart }) => {
 
             <button
               type="submit"
-              disabled={!hasApiBase()}
-              className="w-full bg-blue-800 text-white py-4 px-8 rounded-lg font-semibold text-lg hover:bg-blue-900 transition-all duration-300 flex items-center justify-center space-x-2 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-blue-800 text-white py-4 px-8 rounded-lg font-semibold text-lg hover:bg-blue-900 transition-all duration-300 flex items-center justify-center space-x-2 shadow-md hover:shadow-lg"
             >
               <span>开始测评</span>
               <ChevronRight className="w-5 h-5" />
