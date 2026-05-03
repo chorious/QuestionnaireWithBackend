@@ -1,7 +1,7 @@
 const USER_ID_KEY = 'questionnaire_user_id';
 
 // Hardcoded tunnel URL for production; Vite proxy in dev
-const DEFAULT_BASE = import.meta.env.DEV ? '/api' : 'https://transactions-measures-congress-son.trycloudflare.com';
+const DEFAULT_BASE = import.meta.env.DEV ? '/api' : 'https://wide-radio-specs-namespace.trycloudflare.com';
 
 export function getApiBase(): string {
   return DEFAULT_BASE;

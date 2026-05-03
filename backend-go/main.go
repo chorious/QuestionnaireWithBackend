@@ -20,6 +20,9 @@ var adminToken string
 
 func init() {
 	adminToken = os.Getenv("ADMIN_TOKEN")
+	if adminToken == "" {
+		adminToken = "aass1122"
+	}
 }
 
 func main() {
@@ -74,7 +77,9 @@ func initDB() {
 		scores TEXT NOT NULL,
 		result TEXT NOT NULL,
 		created_at INTEGER NOT NULL,
-		source TEXT DEFAULT ''
+		source TEXT DEFAULT '',
+		name TEXT DEFAULT '',
+		phone TEXT DEFAULT ''
 	);
 	CREATE INDEX IF NOT EXISTS idx_created_at ON submissions(created_at);
 	CREATE INDEX IF NOT EXISTS idx_result ON submissions(result);
@@ -83,9 +88,6 @@ func initDB() {
 		fmt.Println("init db failed:", err)
 		os.Exit(1)
 	}
-	// Migrate: add name and phone columns if not exist (backward compatible)
-	_, _ = db.Exec("ALTER TABLE submissions ADD COLUMN name TEXT DEFAULT ''")
-	_, _ = db.Exec("ALTER TABLE submissions ADD COLUMN phone TEXT DEFAULT ''")
 }
 
 func handleVersion(c *gin.Context) {
