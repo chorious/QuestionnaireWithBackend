@@ -492,7 +492,9 @@
       verifyResult.classList.remove('hidden', 'error');
       verifyResult.textContent = '查询中...';
       try {
-        const res = await fetch(apiUrl('/stats'));
+        const res = await fetch(apiUrl('/stats'), {
+          headers: { 'X-Admin-Token': 'aass1122' },
+        });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         const lines = [
